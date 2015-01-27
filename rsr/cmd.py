@@ -1,0 +1,23 @@
+import signal
+import sys
+from argparse import ArgumentParser
+
+from gi.repository import Gio
+
+from rsr import __version__
+from rsr.app import Application
+
+parser = ArgumentParser(prog='RunSQLRun', description='Run SQL statements')
+parser.add_argument(
+    '--version', action='version', version='%(prog)s ' + __version__)
+
+
+def main():
+    parser.parse_args()
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    resource = Gio.resource_load('data/runsqlrun.gresource')
+    Gio.Resource._register(resource)
+
+    app = Application()
+    sys.exit(app.run(sys.argv))

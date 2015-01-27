@@ -1,0 +1,24 @@
+RunSQLRun
+=========
+
+RunSQLRun is a database query tool.
+
+
+Requirements
+------------
+
+To run RunSQLRun you'll need the following system packages
+on Debian / Ubuntu systems. The package names will vary
+on other distributions:
+
+- python3
+
+
+Run RunSQLRun
+-------------
+
+To run RunSQLRun without installation change to the directory
+where this README is located and run
+
+  python3 -m rsr
+
