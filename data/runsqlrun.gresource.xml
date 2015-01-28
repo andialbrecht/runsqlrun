@@ -2,5 +2,6 @@
 <gresources>
   <gresource prefix="/org/runsqlrun">
     <file preprocess="xml-stripblanks">appmenu.ui</file>
+    <file preprocess="xml-stripblanks">connection_dialog.ui</file>
   </gresource>
 </gresources>

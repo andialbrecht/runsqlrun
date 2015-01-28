@@ -1,5 +1,9 @@
 from gi.repository import Gtk, GtkSource, Pango
 
+from rsr.connections.query import Query
+from rsr.connections.ui import ConnectionDialog
+from rsr.worksheet.results import Results
+
 
 class Editor(GtkSource.View):
 
@@ -21,12 +25,6 @@ class Editor(GtkSource.View):
         self.get_buffer().set_text(text)
 
 
-class Results(Gtk.TreeView):
-
-    def __init__(self):
-        super(Results, self).__init__()
-
-
 class Worksheet(Gtk.VPaned):
 
     def __init__(self, win):
@@ -34,6 +32,7 @@ class Worksheet(Gtk.VPaned):
         self.win = win
         self.editor = Editor()
         self.results = Results()
+        self.connection = None
 
         sw = Gtk.ScrolledWindow()
         sw.add(self.editor)
@@ -64,5 +63,18 @@ class Worksheet(Gtk.VPaned):
     def get_tab_label(self):
         return Gtk.Label('SQL Editor')
 
+    def assume_connection(self):
+        if self.connection is not None:
+            return True
+        dlg = ConnectionDialog(self.win)
+        if dlg.run() == Gtk.ResponseType.OK:
+            self.connection = dlg.get_connection()
+        dlg.destroy()
+        return self.connection is not None
+
     def run_query(self):
-        print('run SQL run!')
+        if not self.assume_connection():
+            return
+        query = Query(self.editor.get_text())
+        self.results.set_query(query)
+        self.connection.run_query(query)
