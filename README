@@ -13,6 +13,11 @@ on other distributions:
 
 - python3
 
+In addition you'll need to install a database driver for
+each database management system you'd like to connect to:
+
+- PostgreSQL: python3-pscopg2
+
 
 Run RunSQLRun
 -------------
@@ -20,5 +25,5 @@ Run RunSQLRun
 To run RunSQLRun without installation change to the directory
 where this README is located and run
 
-  python3 -m rsr
+  ./runlocal.sh
 
