@@ -1,4 +1,5 @@
-from gi.repository import GtkSource, Pango
+import cairo
+from gi.repository import Gtk, GtkSource, Pango
 
 import sqlparse
 
@@ -28,6 +29,10 @@ class Editor(GtkSource.View):
         # attrs.set_icon_name('document-new-symbolic')
         # self.set_mark_attributes('statement', attrs, 10)
         # self.set_show_line_marks(True)
+
+        renderer = StatementGutter(self.buffer)
+        gutter = self.get_gutter(Gtk.TextWindowType.LEFT)
+        gutter.insert(renderer, 1)
 
         self.buffer.connect('changed', self.on_buffer_changed)
 
@@ -76,3 +81,31 @@ class Editor(GtkSource.View):
         if not stmt:
             return None
         return stmt
+
+
+class StatementGutter(GtkSource.GutterRenderer):
+
+    def __init__(self, buf):
+        super(StatementGutter, self).__init__()
+        self.set_size(10)
+        self.buffer = buf
+
+    def _in_statement(self, start):
+        stmt_start = start.copy()
+        marks = self.buffer.get_source_marks_at_iter(stmt_start, 'stmt_start')
+        if not marks:
+            self.buffer.backward_iter_to_source_mark(stmt_start, 'stmt_start')
+        stmt_end = stmt_start.copy()
+        self.buffer.forward_iter_to_source_mark(stmt_end, 'stmt_end')
+        return start.in_range(stmt_start, stmt_end)
+
+    def do_draw(self, cr, background_area, cell_area, start, end, state):
+        in_statement = self._in_statement(start)
+        if not in_statement:
+            return
+        cr.move_to(cell_area.x, cell_area.y)
+        cr.line_to(cell_area.x, cell_area.y + cell_area.height)
+        cr.set_line_width(10)
+        cr.set_line_cap(cairo.LINE_CAP_ROUND)
+        # cr.set_source_rgba(*tuple(self.color))
+        cr.stroke()
