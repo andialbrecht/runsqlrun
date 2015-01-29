@@ -1,8 +1,8 @@
 from gi.repository import Gio, GLib, Gtk
 
-from rsr.headerbar import HeaderBar
+from rsr.connections.ui import ConnectionIndicator
 from rsr.docview import DocViewer
-from rsr.commands import commands
+from rsr.headerbar import HeaderBar
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -14,13 +14,17 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.set_default_size(800, 600)
 
-        self.set_titlebar(HeaderBar(self))
+        self.headerbar = HeaderBar(self)
+        self.set_titlebar(self.headerbar)
 
         self.docview = DocViewer(self)
         self.statusbar = Gtk.Statusbar()
         self.statusbar.set_margin_top(0)
         self.statusbar.set_margin_bottom(0)
         self.statusbar.push(100, 'Ready when you are')
+        self.statusbar.set_spacing(6)
+        self.statusbar.pack_end(ConnectionIndicator(self), False, False, 0)
+        # self.statusbar.pack_end(Gtk.Label('Query info'), False, False, 0)
 
         vbox = Gtk.VBox()
         vbox.pack_start(self.docview, True, True, 0)

@@ -1,4 +1,4 @@
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
 from rsr.connections.query import Query
 from rsr.connections.ui import ConnectionDialog
@@ -7,6 +7,10 @@ from rsr.worksheet.results import Results
 
 
 class Worksheet(Gtk.VPaned):
+
+    __gsignals__ = {
+        'connection-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
+    }
 
     def __init__(self, win):
         super(Worksheet, self).__init__()
@@ -57,6 +61,7 @@ class Worksheet(Gtk.VPaned):
         dlg = ConnectionDialog(self.win)
         if dlg.run() == Gtk.ResponseType.OK:
             self.connection = dlg.get_connection()
+            self.emit('connection-changed')
         dlg.destroy()
         return self.connection is not None
 
@@ -65,6 +70,7 @@ class Worksheet(Gtk.VPaned):
             self.connetion = None
         else:
             self.connection = self.app.connection_manager.get_connection(key)
+        self.emit('connection-changed')
 
     def run_query(self):
         if not self.assume_connection():

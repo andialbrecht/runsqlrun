@@ -64,3 +64,38 @@ class ConnectionDialog(Gtk.Dialog):
             return None
         key = model.get_value(model.get_iter(rows[0]), 0)
         return self.app.connection_manager.get_connection(key)
+
+
+class ConnectionIndicator(Gtk.Label):
+
+    def __init__(self, win):
+        super(ConnectionIndicator, self).__init__()
+        self.win = win
+        self._editor = None
+        self._sig_conn_changed = None
+        self.win.docview.connect('switch-page', self.on_editor_changed)
+        self.win.docview.connect('page-removed', self.on_page_removed)
+
+    def on_page_removed(self, docview, *args):
+        if docview.get_n_pages() == 0:
+            self.on_editor_changed(docview, None, None)
+
+    def on_editor_changed(self, docview, page, num, *args):
+        editor = page
+        if self._editor is not None:
+            self._editor.disconnect(self._sig_conn_changed)
+            self._editor = None
+            self._sig_conn_changed = None
+        if editor is not None:
+            self._sig_conn_changed = editor.connect(
+                'connection-changed', self.on_connection_changed)
+            self._editor = editor
+        self.on_connection_changed(editor)
+
+    def on_connection_changed(self, editor):
+        if editor is None or not editor.connection:
+            self.set_text('[Not connected]')
+            self.win.headerbar.set_subtitle('Database Query Tool')
+        else:
+            self.set_text(editor.connection.key)
+            self.win.headerbar.set_subtitle(editor.connection.key)

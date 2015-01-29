@@ -13,13 +13,13 @@ class DocViewer(Gtk.Notebook):
         self.connect('page-removed', self.on_page_count_changed)
 
     def on_page_count_changed(self, *args):
-        # Somehow GTK seems to change colors of child widgets if
-        # tabs are shown or not.
         enabled = self.get_n_pages() != 0
         for name in self.win.app.action_groups['editor'].list_actions():
             self.win.app.lookup_action(name).set_enabled(enabled)
-        return
-        self.set_show_tabs(self.get_n_pages() > 1)
+
+        # Somehow GTK seems to change colors of child widgets if
+        # tabs are shown or not.
+        # self.set_show_tabs(self.get_n_pages() > 1)
 
     def save_state(self):
         state = {
