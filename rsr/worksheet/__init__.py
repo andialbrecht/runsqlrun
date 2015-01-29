@@ -73,8 +73,11 @@ class Worksheet(Gtk.VPaned):
         self.emit('connection-changed')
 
     def run_query(self):
+        stmt = self.editor.get_statement_at_cursor()
+        if stmt is None:
+            return
         if not self.assume_connection():
             return
-        query = Query(self.editor.get_text())
+        query = Query(stmt)
         self.results.set_query(query)
         self.connection.run_query(query)
