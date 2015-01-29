@@ -5,6 +5,9 @@ class Results(Gtk.TreeView):
 
     def __init__(self):
         super(Results, self).__init__()
+        self.set_reorderable(False)
+        self.set_enable_search(False)
+        self.set_fixed_height_mode(True)
 
     def set_query(self, query):
         self.clear_results()
@@ -16,8 +19,9 @@ class Results(Gtk.TreeView):
             renderer.set_property('ellipsize', Pango.EllipsizeMode.END)
             col = Gtk.TreeViewColumn(
                 item[0].replace('_', '__'), renderer, text=idx)
-            col.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+            col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
             col.set_fixed_width(100)
+            col.set_resizable(True)
             self.append_column(col)
         model = CustomTreeModel(query.result)
         self.set_model(model)
