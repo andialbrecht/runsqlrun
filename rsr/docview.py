@@ -51,3 +51,8 @@ class DocViewer(Gtk.Notebook):
 
     def get_current_editor(self):
         return self.get_nth_page(self.get_current_page())
+
+    def switch_to_editor(self, num):
+        if num > self.get_n_pages() or num < 0:
+            return
+        self.set_current_page(num - 1)

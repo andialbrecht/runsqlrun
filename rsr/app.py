@@ -60,14 +60,14 @@ class Application(Gtk.Application):
         Gtk.Application.do_startup(self)
         self.build_app_menu()
 
-    def _generic_callback(self, group, callback, *args):
+    def _generic_callback(self, group, callback, cbargs, *args):
         if group == 'editor':
             cb = self.win.docview.get_current_editor()
         else:
             cb = self
         for part in callback.split('.'):
             cb = getattr(cb, part)
-        cb()
+        cb(*cbargs)
         return True
 
     def do_activate(self):
@@ -83,7 +83,8 @@ class Application(Gtk.Application):
                 action = Gio.SimpleAction.new(
                     '{}_{}'.format(group_key, action_key), None)
                 callback = partial(self._generic_callback,
-                                   group_key, action_data['callback'])
+                                   group_key, action_data['callback'],
+                                   action_data.get('args', ()))
                 action.connect('activate', callback)
                 group.insert(action)
                 key, mod = Gtk.accelerator_parse(action_data['shortcut'])
