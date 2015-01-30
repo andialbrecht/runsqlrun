@@ -8,12 +8,20 @@ class Results(Gtk.TreeView):
         self.set_reorderable(False)
         self.set_enable_search(False)
         self.set_fixed_height_mode(True)
+        self._active_query = None
 
     def set_query(self, query):
+        self._active_query = query
         self.clear_results()
         query.connect('finished', self.on_query_finished)
 
+    def get_active_query(self):
+        return self._active_query
+
     def on_query_finished(self, query):
+        if query.failed:
+            print(query.error)
+            return
         for idx, item in enumerate(query.description):
             renderer = Gtk.CellRendererText()
             renderer.set_property('ellipsize', Pango.EllipsizeMode.END)

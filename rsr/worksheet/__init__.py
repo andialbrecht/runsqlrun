@@ -10,6 +10,7 @@ class Worksheet(Gtk.VPaned):
 
     __gsignals__ = {
         'connection-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
+        'active-query-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
     }
 
     def __init__(self, win):
@@ -72,6 +73,9 @@ class Worksheet(Gtk.VPaned):
             self.connection = self.app.connection_manager.get_connection(key)
         self.emit('connection-changed')
 
+    def get_active_query(self):
+        return self.results.get_active_query()
+
     def run_query(self):
         stmt = self.editor.get_statement_at_cursor()
         if stmt is None:
@@ -80,4 +84,5 @@ class Worksheet(Gtk.VPaned):
             return
         query = Query(stmt)
         self.results.set_query(query)
+        self.emit('active-query-changed')
         self.connection.run_query(query)

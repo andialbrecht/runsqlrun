@@ -24,7 +24,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.statusbar.push(100, 'Ready when you are')
         self.statusbar.set_spacing(6)
         self.statusbar.pack_end(ConnectionIndicator(self), False, False, 0)
-        # self.statusbar.pack_end(Gtk.Label('Query info'), False, False, 0)
 
         vbox = Gtk.VBox()
         vbox.pack_start(self.docview, True, True, 0)

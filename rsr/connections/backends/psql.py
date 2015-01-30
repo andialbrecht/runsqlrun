@@ -18,3 +18,9 @@ class Driver(BaseDriver):
         kwargs['password'] = self.config.get('password', None)
         kwargs['dbname'] = self.config.get('db', None)
         return args, kwargs
+
+    def connect(self):
+        connected = super(Driver, self).connect()
+        if connected:
+            self._conn.autocommit = True
+        return connected

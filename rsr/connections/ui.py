@@ -1,4 +1,6 @@
-from gi.repository import Gtk
+import time
+
+from gi.repository import Gtk, GObject
 
 
 class ConnectionDialog(Gtk.Dialog):
@@ -66,13 +68,22 @@ class ConnectionDialog(Gtk.Dialog):
         return self.app.connection_manager.get_connection(key)
 
 
-class ConnectionIndicator(Gtk.Label):
+class ConnectionIndicator(Gtk.Box):
 
     def __init__(self, win):
         super(ConnectionIndicator, self).__init__()
         self.win = win
+
+        self.set_orientation(Gtk.Orientation.HORIZONTAL)
+        self.set_spacing(6)
+        self.lbl_conn = Gtk.Label()
+        self.lbl_query = Gtk.Label()
+        self.pack_start(self.lbl_query, True, False, 0)
+        self.pack_start(self.lbl_conn, True, False, 0)
+
         self._editor = None
         self._sig_conn_changed = None
+        self._sig_query_changed = None
         self.win.docview.connect('switch-page', self.on_editor_changed)
         self.win.docview.connect('page-removed', self.on_page_removed)
 
@@ -84,18 +95,40 @@ class ConnectionIndicator(Gtk.Label):
         editor = page
         if self._editor is not None:
             self._editor.disconnect(self._sig_conn_changed)
+            self._editor.disconnect(self._sig_query_changed)
             self._editor = None
             self._sig_conn_changed = None
+            self._sig_query_changed = None
         if editor is not None:
+            self._editor = editor
             self._sig_conn_changed = editor.connect(
                 'connection-changed', self.on_connection_changed)
-            self._editor = editor
+            self._sig_query_changed = editor.connect(
+                'active-query-changed', self.on_query_changed)
         self.on_connection_changed(editor)
+        self.on_query_changed(editor)
 
     def on_connection_changed(self, editor):
         if editor is None or not editor.connection:
-            self.set_text('[Not connected]')
+            self.lbl_conn.set_text('[Not connected]')
             self.win.headerbar.set_subtitle('Database Query Tool')
         else:
-            self.set_text(editor.connection.key)
+            self.lbl_conn.set_text(editor.connection.key)
             self.win.headerbar.set_subtitle(editor.connection.key)
+
+    def on_query_changed(self, editor):
+        if editor is None:
+            self.lbl_query.set_text('')
+            return
+        query = editor.get_active_query()
+        if query is None or query.failed:
+            self.lbl_query.set_text('')
+        elif query.finished:
+            self.lbl_query.set_text(query.get_result_summary())
+        elif query.pending:
+            self.lbl_query.set_text('Pending...')
+            GObject.timeout_add(10, self.on_query_changed, self._editor)
+        else:
+            duration = time.time() - query.start_time
+            self.lbl_query.set_text('Running for %.3f seconds' % duration)
+            GObject.timeout_add(10, self.on_query_changed, self._editor)

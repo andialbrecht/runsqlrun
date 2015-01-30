@@ -25,7 +25,15 @@ class Connection(threading.Thread):
             if not self.open():
                 continue
             GObject.idle_add(query.emit, 'started')
-            self.db.execute(query)
+            query.start_time = time.time()
+            query.pending = False
+            try:
+                self.db.execute(query)
+            except Exception as err:
+                query.failed = True
+                query.error = str(err)
+            query.execution_duration = time.time() - query.start_time
+            query.finished = True
             GObject.idle_add(query.emit, 'finished')
         if self.db is not None:
             self.db.close()
