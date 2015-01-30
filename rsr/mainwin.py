@@ -1,4 +1,4 @@
-from gi.repository import Gio, GLib, Gtk
+from gi.repository import Gio, GLib, Gtk, GObject
 
 from rsr.connections.ui import ConnectionIndicator
 from rsr.docview import DocViewer
@@ -21,7 +21,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.statusbar = Gtk.Statusbar()
         self.statusbar.set_margin_top(0)
         self.statusbar.set_margin_bottom(0)
-        self.statusbar.push(100, 'Ready when you are')
+        self.statusbar.push(303, 'Ready when you are')
+        GObject.timeout_add(3000, self.statusbar.pop, 303)
         self.statusbar.set_spacing(6)
         self.statusbar.pack_end(ConnectionIndicator(self), False, False, 0)
 
