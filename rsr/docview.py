@@ -1,3 +1,6 @@
+import re
+from functools import partial
+
 from gi.repository import Gtk
 
 from rsr.worksheet import Worksheet
@@ -44,7 +47,19 @@ class DocViewer(Gtk.Notebook):
         worksheet.show_all()
         self.set_current_page(self.get_n_pages() - 1)
         worksheet.editor.grab_focus()
+        worksheet.editor.buffer.connect(
+            'changed', partial(self.on_buffer_changed, label))
         return worksheet
+
+    def on_buffer_changed(self, label, buffer):
+        txt = buffer.get_text(*buffer.get_bounds(), include_hidden_chars=False)
+        txt = re.sub(r'[ \r\n\t]+', ' ', txt).strip()
+        txt_stripped = txt[:20].strip()
+        if len(txt_stripped) < len(txt):
+            txt_stripped += '…'
+        if not txt_stripped:
+            txt_stripped = 'SQL Editor'
+        label.set_text(txt_stripped)
 
     def close_current_editor(self):
         self.remove_page(self.get_current_page())
