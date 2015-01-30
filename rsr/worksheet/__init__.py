@@ -45,13 +45,15 @@ class Worksheet(Gtk.VPaned):
         return {
             'content': self.editor.get_text(),
             'split_pos': self.get_position(),
-            'connection': conn_key
+            'connection': conn_key,
+            'cursor': self.editor.get_cursor_position(),
         }
 
     def restore_state(self, state):
         self.editor.set_text(state['content'])
         self.set_position(state.get('split_pos', 0))
         self.set_connection(state.get('connection', None))
+        self.editor.set_cursor_position(state.get('cursor', None))
 
     def get_tab_label(self):
         return Gtk.Label('SQL Editor')

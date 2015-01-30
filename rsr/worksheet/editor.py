@@ -60,6 +60,17 @@ class Editor(GtkSource.View):
             iter_ = buf.get_iter_at_offset(offset)
             buf.create_source_mark(None, 'stmt_end', iter_)
 
+    def get_cursor_position(self):
+        mark = self.buffer.get_insert()
+        iter_ = self.buffer.get_iter_at_mark(mark)
+        return iter_.get_offset()
+
+    def set_cursor_position(self, offset):
+        if offset is None:
+            return
+        iter_ = self.buffer.get_iter_at_offset(offset)
+        self.buffer.place_cursor(iter_)
+
     def get_text(self):
         buf = self.get_buffer()
         return buf.get_text(*buf.get_bounds(), include_hidden_chars=False)
