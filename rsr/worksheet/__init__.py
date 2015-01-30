@@ -25,9 +25,7 @@ class Worksheet(Gtk.VPaned):
         sw.add(self.editor)
         self.add1(sw)
 
-        sw = Gtk.ScrolledWindow()
-        sw.add(self.results)
-        self.add2(sw)
+        self.add2(self.results)
 
         self.connect('realize', self.on_map_event)
 

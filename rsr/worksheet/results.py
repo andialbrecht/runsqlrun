@@ -1,26 +1,49 @@
-from gi.repository import Gtk, GObject, Pango
+import time
+
+from gi.repository import Gtk, GObject, Pango, Gdk
 
 
-class Results(Gtk.TreeView):
+class Results(Gtk.Notebook):
 
     def __init__(self):
         super(Results, self).__init__()
-        self.set_reorderable(False)
-        self.set_enable_search(False)
-        self.set_fixed_height_mode(True)
         self._active_query = None
+
+        self.data = DataList(self)
+        sw = Gtk.ScrolledWindow()
+        sw.add(self.data)
+        self.append_page(sw, Gtk.Label('Results'))
+
+        self.log = QueryLog()
+        sw = Gtk.ScrolledWindow()
+        sw.add(self.log)
+        self.append_page(sw, Gtk.Label('Log'))
 
     def set_query(self, query):
         self._active_query = query
-        self.clear_results()
-        query.connect('finished', self.on_query_finished)
+        self.data.set_query(query)
+        self.log.add_query(query)
+        self.set_current_page(1)
 
     def get_active_query(self):
         return self._active_query
 
+
+class DataList(Gtk.TreeView):
+
+    def __init__(self, results):
+        super(DataList, self).__init__()
+        self.set_reorderable(False)
+        self.set_enable_search(False)
+        self.set_fixed_height_mode(True)
+        self.results = results
+
+    def set_query(self, query):
+        self.clear_results()
+        query.connect('finished', self.on_query_finished)
+
     def on_query_finished(self, query):
         if query.failed:
-            print(query.error)
             return
         for idx, item in enumerate(query.description):
             renderer = Gtk.CellRendererText()
@@ -33,6 +56,7 @@ class Results(Gtk.TreeView):
             self.append_column(col)
         model = CustomTreeModel(query.result)
         self.set_model(model)
+        self.results.set_current_page(0)
 
     def clear_results(self):
         for column in self.get_columns():
@@ -119,3 +143,67 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
     def do_get_flags(self):
         """Returns the flags supported by this interface."""
         return Gtk.TreeModelFlags.ITERS_PERSIST
+
+
+class QueryLog(Gtk.TreeView):
+
+    def __init__(self):
+        super(QueryLog, self).__init__()
+        model = Gtk.ListStore(str, Gdk.RGBA)
+        self.set_model(model)
+        column = Gtk.TreeViewColumn(
+            '', Gtk.CellRendererText(), markup=0, foreground_rgba=1)
+        self.append_column(column)
+        self.set_headers_visible(False)
+        self.set_reorderable(False)
+        self.set_enable_search(False)
+        lbl = Gtk.Label()
+        context = lbl.get_style_context()
+        self.dimmed_fg = context.get_color(Gtk.StateFlags.INSENSITIVE)
+        self.col_error = self.dimmed_fg.copy()
+        self.col_error.red = max(self.col_error.red * 1.7, 1)
+        self.col_error.green *= 0.7
+        self.col_error.blue *= 0.7
+        font_desc = Pango.FontDescription.from_string('Ubuntu Mono 12')
+        self.modify_font(font_desc)
+
+    def add_query(self, query):
+        model = self.get_model()
+        if model.get_iter_first():
+            model.set_value(model.get_iter_first(), 1, self.dimmed_fg)
+        model.prepend([self._get_markup(query), None])
+        self.scroll_to_cell(model.get_path(model.get_iter_first()),
+                            self.get_column(0), False, 0, 0)
+        if not query.finished:
+            GObject.timeout_add(17, self._update_current, query)
+
+    def _update_current(self, query):
+        model = self.get_model()
+        model.set_value(model.get_iter_first(), 0, self._get_markup(query))
+        if not query.finished:
+            GObject.timeout_add(17, self._update_current, query)
+        elif query.failed:
+            model.set_value(model.get_iter_first(), 1, self.col_error)
+
+    def _get_markup(self, query):
+        if query.finished:
+            if query.failed:
+                markup = '✗ '
+            else:
+                markup = '✓ '
+        else:
+            markup = ''
+        markup += GObject.markup_escape_text(query.sql.strip())
+        if query.finished:
+            if query.failed:
+                content = query.error.strip()
+            else:
+                content = query.get_result_summary()
+            markup += '\n<small>%s</small>' % GObject.markup_escape_text(
+                content)
+        elif query.pending:
+            markup += '\n<small>Pending...</small>'
+        else:
+            markup += '\n<small>Running for %.3f seconds</small>' % (
+                time.time() - query.start_time)
+        return markup
