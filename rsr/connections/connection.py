@@ -22,7 +22,14 @@ class Connection(threading.Thread):
                 time.sleep(.05)
                 continue
             query = self.queries.pop()
-            if not self.open():
+            try:
+                if not self.open():
+                    continue
+            except Exception as err:
+                query.finished = True
+                query.failed = True
+                query.error = str(err).strip()
+                GObject.idle_add(query.emit, 'finished')
                 continue
             GObject.idle_add(query.emit, 'started')
             query.start_time = time.time()

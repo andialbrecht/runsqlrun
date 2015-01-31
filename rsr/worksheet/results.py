@@ -171,10 +171,11 @@ class QueryLog(Gtk.TreeView):
         model = self.get_model()
         if model.get_iter_first():
             model.set_value(model.get_iter_first(), 1, self.dimmed_fg)
+        finished = query.finished
         model.prepend([self._get_markup(query), None])
         self.scroll_to_cell(model.get_path(model.get_iter_first()),
                             self.get_column(0), False, 0, 0)
-        if not query.finished:
+        if not finished:
             GObject.timeout_add(17, self._update_current, query)
 
     def _update_current(self, query):
