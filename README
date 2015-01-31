@@ -8,10 +8,11 @@ Requirements
 ------------
 
 To run RunSQLRun you'll need the following system packages
-on Debian / Ubuntu systems. The package names will vary
+on Debian / Ubuntu systems. The package names may vary
 on other distributions:
 
 - python3
+- python3-gi
 
 In addition you'll need to install a database driver for
 each database management system you'd like to connect to:
