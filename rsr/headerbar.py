@@ -16,11 +16,11 @@ class HeaderBar(Gtk.HeaderBar):
         self.pack_start(self._btn_from_command('app', 'neweditor'))
         self.pack_start(self._btn_from_command('editor', 'run'))
 
-        btn = Gtk.Button()
-        icon = Gio.ThemedIcon(name="preferences-system-symbolic")
-        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-        btn.add(image)
-        self.pack_end(btn)
+        # btn = Gtk.Button()
+        # icon = Gio.ThemedIcon(name="preferences-system-symbolic")
+        # image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+        # btn.add(image)
+        # self.pack_end(btn)
 
     def _btn_from_command(self, group, name):
         btn = Gtk.Button()
