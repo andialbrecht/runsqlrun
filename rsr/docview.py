@@ -39,6 +39,9 @@ class DocViewer(Gtk.Notebook):
             worksheet = self.add_worksheet()
             worksheet.restore_state(data)
         self.set_current_page(state['current'])
+        if self.get_n_pages() == 0:
+            worksheet = self.add_worksheet()
+            worksheet.editor.set_text(WELCOME_MSG)
 
     def add_worksheet(self):
         worksheet = Worksheet(self.win)
@@ -71,3 +74,24 @@ class DocViewer(Gtk.Notebook):
         if num > self.get_n_pages() or num < 0:
             return
         self.set_current_page(num - 1)
+
+
+WELCOME_MSG = """/* Start typing your SQL here.
+
+   Some helpful shortcuts to get started:
+
+        Ctrl+N  Open new SQL Editor
+    Ctrl+Enter  Run statement at cursor
+            F9  Choose or add a database connection
+           F10  Disconnect from database
+        Ctrl+W  Close current SQL editor
+        Ctrl+Q  Close RunSQLRun
+
+   Any feedback is highly appreciated!
+
+   Issue tracker: https://bitbucket.org/andialbrecht/runsqlrun
+
+   Have fun!
+
+*/
+"""
