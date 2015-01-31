@@ -72,8 +72,11 @@ class ConnectionManager(GObject.GObject):
         if 'key' not in data:
             data['key'] = str(uuid.uuid4()).replace('-', '')
         key = data.pop('key')
-        with open(CONNECTIONS_FILE) as f:
-            content = json.load(f)
+        if os.path.exists(CONNECTIONS_FILE):
+            with open(CONNECTIONS_FILE) as f:
+                content = json.load(f)
+        else:
+            content = {}
         content[key] = data
         with open(CONNECTIONS_FILE, 'w') as f:
             json.dump(content, f)
