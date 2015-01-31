@@ -28,3 +28,13 @@ where this README is located and run
 
   ./runlocal.sh
 
+
+Links
+-----
+
+Source: https://bitbucket.org/andialbrecht/runsqlrun/
+
+
+Copyright (c) 2015 Andi Albrecht <albrecht.andi@gmail.com>
+RunSQLRun is licensed under the terms of the MIT license.
+See the file LICENSE for details.
