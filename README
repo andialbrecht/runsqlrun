@@ -26,7 +26,11 @@ Run RunSQLRun
 To run RunSQLRun without installation change to the directory
 where this README is located and run
 
-  ./runlocal.sh
+  $ make
+  $ python3 -m rsr
+
+Calling "make" is only required once or when you update a source
+checkout. It generates some files required to run the application.
 
 
 Links
