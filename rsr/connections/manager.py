@@ -1,9 +1,11 @@
-import os
 import json
+import os
+import uuid
 
 from gi.repository import GObject
 from xdg import BaseDirectory
 
+from rsr.connections.backends import get_available_drivers
 from rsr.connections.connection import Connection
 
 
@@ -12,6 +14,10 @@ CONNECTIONS_FILE = BaseDirectory.load_first_config(
 
 
 class ConnectionManager(GObject.GObject):
+
+    __gsignals__ = {
+        'connection-deleted': (GObject.SIGNAL_RUN_LAST, None, (str,)),
+    }
 
     def __init__(self, app):
         super(ConnectionManager, self).__init__()
@@ -26,11 +32,18 @@ class ConnectionManager(GObject.GObject):
             data = json.load(f)
         for key in data:
             if key in self._connections:
-                self._connections.update_config(data[key])
+                self._connections[key].update_config(data[key])
             else:
                 conn = Connection(key, data[key])
                 self._connections[key] = conn
                 conn.start()
+        # remove deleted connections
+        for key in list(self._connections):
+            if key not in data:
+                conn = self._connections.pop(key)
+                conn.keep_running = False
+                conn.join()
+                self.emit('connection-deleted', conn.key)
 
     def shutdown(self):
         for key in list(self._connections):
@@ -43,3 +56,35 @@ class ConnectionManager(GObject.GObject):
 
     def get_connection(self, key):
         return self._connections.get(key, None)
+
+    def get_available_drivers(self):
+        return get_available_drivers()
+
+    def test_connection(self, data):
+        conn = Connection(None, data)
+        try:
+            conn.open()
+            return True
+        except Exception as err:
+            return str(err).strip()
+
+    def update_connection(self, data):
+        if 'key' not in data:
+            data['key'] = str(uuid.uuid4()).replace('-', '')
+        key = data.pop('key')
+        with open(CONNECTIONS_FILE) as f:
+            content = json.load(f)
+        content[key] = data
+        with open(CONNECTIONS_FILE, 'w') as f:
+            json.dump(content, f)
+        self.update_connections()
+        return key
+
+    def delete_connection(self, key):
+        with open(CONNECTIONS_FILE) as f:
+            content = json.load(f)
+        if key in content:
+            del content[key]
+            with open(CONNECTIONS_FILE, 'w') as f:
+                json.dump(content, f)
+        self.update_connections()

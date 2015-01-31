@@ -74,7 +74,23 @@ commands = {
                 'icon': 'media-playback-start-symbolic',
                 'shortcut': '<Control>Return',
                 'callback': 'run_query'
-            }
+            },
+            'dbconnect': {
+                'label': 'Connect',
+                'description': 'Open or change database connection',
+                'icon': 'gtk-connect',
+                'shortcut': 'F9',
+                'callback': 'assume_connection',
+                'args': [True]
+            },
+            'dbdisconnect': {
+                'label': 'Disconnect',
+                'description': 'Close database connection',
+                'icon': 'gtk-disconnect',
+                'shortcut': 'F10',
+                'callback': 'set_connection',
+                'args': [None]
+            },
         }
     }
 }

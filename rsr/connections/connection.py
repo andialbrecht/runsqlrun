@@ -39,10 +39,23 @@ class Connection(threading.Thread):
             self.db.close()
 
     def update_config(self, config):
-        raise NotImplementedError()
+        # TODO: if the connection is open something should happen...
+        self.config = config
 
     def get_label(self):
-        return self.key
+        lbl = self.config.get('name')
+        if not lbl:
+            # TODO: add some URI building like sqlalchemy does it as a fallback
+            parts = []
+            if self.config.get('db'):
+                parts.append(self.config.get('db'))
+            if self.config.get('host'):
+                parts.append(self.config.get('host'))
+            if parts:
+                lbl = '@'.join(parts)
+            else:
+                lbl = self.key
+        return lbl
 
     def open(self):
         if self.db is None:

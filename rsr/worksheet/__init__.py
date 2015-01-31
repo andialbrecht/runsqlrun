@@ -28,12 +28,18 @@ class Worksheet(Gtk.VPaned):
         self.add2(self.results)
 
         self.connect('realize', self.on_map_event)
+        self.app.connection_manager.connect(
+            'connection-deleted', self.on_connection_deleted)
 
     def on_map_event(self, *args):
         if self.get_position() != 0:
             return
         height = self.get_parent().get_allocation().height
         self.set_position(int(height / 3) * 2)
+
+    def on_connection_deleted(self, manager, key):
+        if self.connection is not None and self.connection.key == key:
+            self.set_connection(None)
 
     def save_state(self):
         if self.connection is not None:
@@ -56,8 +62,8 @@ class Worksheet(Gtk.VPaned):
     def get_tab_label(self):
         return Gtk.Label('SQL Editor')
 
-    def assume_connection(self):
-        if self.connection is not None:
+    def assume_connection(self, force=False):
+        if self.connection is not None and not force:
             return True
         dlg = ConnectionDialog(self.win)
         if dlg.run() == Gtk.ResponseType.OK:
@@ -68,7 +74,7 @@ class Worksheet(Gtk.VPaned):
 
     def set_connection(self, key):
         if key is None:
-            self.connetion = None
+            self.connection = None
         else:
             self.connection = self.app.connection_manager.get_connection(key)
         self.emit('connection-changed')
