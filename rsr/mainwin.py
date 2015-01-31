@@ -1,4 +1,4 @@
-from gi.repository import Gio, GLib, Gtk, GObject
+from gi.repository import Gtk, GObject
 
 from rsr.connections.ui import ConnectionIndicator
 from rsr.docview import DocViewer
@@ -10,7 +10,6 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         super(MainWindow, self).__init__(application=app, title='RunSQLRun')
         self.app = app
-        self.settings = Gio.Settings.new('org.runsqlrun')
 
         self.set_default_size(800, 600)
 
@@ -33,16 +32,13 @@ class MainWindow(Gtk.ApplicationWindow):
         # TODO: Statusbar
 
         # save and restore window settings
-        if self.settings.get_value('window-maximized'):
+        if self.app.config.get('window-maximized'):
             self.maximize()
-        size_setting = self.settings.get_value('window-size')
-        if isinstance(size_setting[0], int) \
-           and isinstance(size_setting[1], int):
+        size_setting = self.app.config.get('window-size')
+        if size_setting is not None:
             self.resize(size_setting[0], size_setting[1])
-        position_setting = self.settings.get_value('window-position')
-        if len(position_setting) == 2 \
-           and isinstance(position_setting[0], int) \
-           and isinstance(position_setting[1], int):
+        position_setting = self.app.config.get('window-position')
+        if position_setting is not None:
             self.move(position_setting[0], position_setting[1])
         self.connect('window-state-event', self.on_window_state_event)
         self.connect('configure-event', self.on_configure_event)
@@ -57,17 +53,15 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def on_configure_event(self, widget, event):
         size = widget.get_size()
-        self.settings.set_value(
-            'window-size', GLib.Variant('ai', [size[0], size[1]]))
+        self.app.config['window-size'] = [size[0], size[1]]
 
         position = widget.get_position()
-        self.settings.set_value(
-            'window-position', GLib.Variant('ai', [position[0], position[1]]))
+        self.app.config['window-position'] = [position[0], position[1]]
 
     def on_window_state_event(self, widget, event):
-        self.settings.set_boolean(
-            'window-maximized',
+        maximized = (
             'GDK_WINDOW_STATE_MAXIMIZED' in event.new_window_state.value_names)
+        self.app.config['window-maximized'] = maximized
 
     def save_state(self):
         state = {'docview': self.docview.save_state()}

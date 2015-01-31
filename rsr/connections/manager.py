@@ -9,8 +9,8 @@ from rsr.connections.backends import get_available_drivers
 from rsr.connections.connection import Connection
 
 
-CONNECTIONS_FILE = BaseDirectory.load_first_config(
-    'runsqlrun', 'connections.json')
+CONNECTIONS_FILE = os.path.join(BaseDirectory.save_config_path('runsqlrun'),
+                                'connections.json')
 
 
 class ConnectionManager(GObject.GObject):

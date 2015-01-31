@@ -5,6 +5,7 @@ from functools import partial
 import xdg.BaseDirectory
 from gi.repository import Gio, GLib, Gtk
 
+from rsr import config
 from rsr.commands import commands
 from rsr.connections.manager import ConnectionManager
 from rsr.mainwin import MainWindow
@@ -54,6 +55,7 @@ class Application(Gtk.Application):
             xdg.BaseDirectory.save_config_path('runsqlrun'), 'state')
         with open(statefile, 'w') as f:
             json.dump(state, f)
+        config.save(self.config)
         Gtk.Application.do_window_removed(self, window)
 
     def do_startup(self):
@@ -72,6 +74,7 @@ class Application(Gtk.Application):
 
     def do_activate(self):
         self.connection_manager = ConnectionManager(self)
+        self.config = config.load()
         self.action_groups = {}
         accel_group = Gtk.AccelGroup()
         for group_key in commands:
