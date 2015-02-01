@@ -4,6 +4,7 @@ import time
 from gi.repository import GObject
 
 from rsr.connections import backends
+from rsr.schema.provider import SchemaProvider
 
 
 class Connection(threading.Thread):
@@ -14,6 +15,7 @@ class Connection(threading.Thread):
         self.config = config
         self.queries = list()
         self.db = None
+        self.schema = SchemaProvider(self)
         self.keep_running = True
         self._session_pwd = False
 
@@ -85,6 +87,7 @@ class Connection(threading.Thread):
             self.db = backends.get_backend(self.config)
             if not self.db.connect():
                 self.db = None
+            self.schema.refresh()
         return self.db is not None
 
     def run_query(self, query):

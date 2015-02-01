@@ -17,9 +17,9 @@ class Worksheet(Gtk.VPaned):
         super(Worksheet, self).__init__()
         self.win = win
         self.app = win.app
-        self.editor = Editor()
-        self.results = Results()
         self.connection = None
+        self.editor = Editor(self)
+        self.results = Results()
 
         sw = Gtk.ScrolledWindow()
         sw.add(self.editor)

@@ -1,10 +1,15 @@
 class BaseDriver:
 
     dbapi = None
+    schema_class = None
 
     def __init__(self, config):
         self.config = config
         self._conn = None
+
+    @property
+    def schema(self):
+        return self.schema_class(self)
 
     def get_connect_params(self):
         raise NotImplementedError()
@@ -26,3 +31,8 @@ class BaseDriver:
         query.description = cur.description
         query.result = cur.fetchall()
         cur.close()
+
+    def execute_raw(self, sql):
+        cur = self._conn.cursor()
+        cur.execute(sql)
+        return cur

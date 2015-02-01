@@ -4,14 +4,15 @@ from gi.repository import Gtk, GtkSource, Pango
 import sqlparse
 
 from rsr import paths
-from rsr.worksheet.completion import SqlKeywordProvider
+from rsr.worksheet.completion import SqlKeywordProvider, DbObjectProvider
 
 
 class Editor(GtkSource.View):
 
-    def __init__(self):
+    def __init__(self, worksheet):
         super(Editor, self).__init__()
         self.buffer = GtkSource.Buffer()
+        self.worksheet = worksheet
 
         sm = GtkSource.StyleSchemeManager()
         sm.append_search_path(paths.theme_dir)
@@ -42,6 +43,7 @@ class Editor(GtkSource.View):
 
     def _setup_completions(self):
         completion = self.get_completion()
+        completion.add_provider(DbObjectProvider(self.worksheet))
         completion.add_provider(SqlKeywordProvider())
 
     def on_buffer_changed(self, buf):

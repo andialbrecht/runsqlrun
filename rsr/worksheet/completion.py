@@ -22,19 +22,56 @@ KEYWORDS = set(KEYWORDS)
 
 
 def matches(word1, word2):
-    regex = r'.*?'.join(re.escape(y) for y in word1)
+    if word1 is None:
+        return None
+    regex = r'.*?'.join(r'({})'.format(re.escape(y)) for y in word1)
     return re.search(regex, word2, re.U | re.I)
 
 
-class SqlKeywordProposal(GObject.GObject, GtkSource.CompletionProposal):
+class ProviderMixin:
 
-    def __init__(self, keyword, match):
-        super(SqlKeywordProposal, self).__init__()
-        self.keyword = keyword
-        self.match = match
-        self.score = self._calc_score()
+    def _get_word(self, context):
+        activation = context.get_activation()
+        requested = activation != GtkSource.CompletionActivation.USER_REQUESTED
+        end_iter = context.get_iter()
+        start_iter = end_iter.copy()
+        while not start_iter.starts_line():
+            start_iter.backward_char()
+            char = start_iter.get_char()
+            if not char.isalnum() and char not in ['_']:
+                start_iter.forward_char()
+                break
+        word = end_iter.get_buffer().get_text(start_iter, end_iter, False)
+        if not word and requested:
+            return None
+        return word
 
-    def _calc_score(self):
+
+class ProposalMixin:
+
+    def _get_match_offsets(self, match, word):
+        rest = word
+        offset = 0
+        for group in self.match.groups():
+            idx = rest.index(group)
+            offset += idx
+            yield offset
+            rest = rest[idx:]
+
+    def _highlight_match(self, match, word):
+        pos = 0
+        markup = ''
+        for offset in self._get_match_offsets(match, word):
+            markup += GObject.markup_escape_text(word[pos:offset])
+            markup += '<span underline="single">'
+            markup += GObject.markup_escape_text(word[offset])
+            markup += '</span>'
+            pos = offset + 1
+        markup += GObject.markup_escape_text(word[pos:])
+        return markup
+
+    def _calc_score(self, match, word):
+        return sum(self._get_match_offsets(match, word))
         # The shorter the better
         # The closer to beginning of word the better
         # The more it matches of a word the better
@@ -43,23 +80,28 @@ class SqlKeywordProposal(GObject.GObject, GtkSource.CompletionProposal):
         score = score * (start + 0.1)
         return score
 
+
+class SqlKeywordProposal(GObject.GObject, GtkSource.CompletionProposal,
+                         ProposalMixin):
+
+    def __init__(self, keyword, match):
+        super(SqlKeywordProposal, self).__init__()
+        self.keyword = keyword
+        self.match = match
+        self.score = self._calc_score(match, keyword)
+
     def do_get_text(self):
         return self.keyword + ' '
 
     def do_get_markup(self):
-        start, end = self.match.span()
-        markup = GObject.markup_escape_text(self.keyword[:start])
-        markup += '<span underline="single">'
-        markup += GObject.markup_escape_text(self.keyword[start:end])
-        markup += '</span>'
-        markup += GObject.markup_escape_text(self.keyword[end:])
-        return markup
+        return self._highlight_match(self.match, self.keyword)
 
     def do_get_info(self):
         return 'Keyword'
 
 
-class SqlKeywordProvider(GObject.GObject, GtkSource.CompletionProvider):
+class SqlKeywordProvider(GObject.GObject, GtkSource.CompletionProvider,
+                         ProviderMixin):
 
     def __init__(self):
         super(SqlKeywordProvider, self).__init__()
@@ -71,11 +113,7 @@ class SqlKeywordProvider(GObject.GObject, GtkSource.CompletionProvider):
         return None
 
     def do_populate(self, context):
-        end_iter = context.get_iter()
-        start_iter = end_iter.copy()
-        start_iter.backward_word_starts(1)
-        buff = end_iter.get_buffer()
-        word = buff.get_text(start_iter, end_iter, False)
+        word = self._get_word(context)
         proposals = []
         for keyword in KEYWORDS:
             match = matches(word, keyword)
@@ -90,3 +128,55 @@ class SqlKeywordProvider(GObject.GObject, GtkSource.CompletionProvider):
 
     def do_match(self, context):
         return True
+
+
+class DbObjectProposal(GObject.GObject, GtkSource.CompletionProposal,
+                       ProposalMixin):
+
+    def __init__(self, obj, match):
+        super(DbObjectProposal, self).__init__()
+        self.obj = obj
+        self.match = match
+        self.score = self._calc_score(match, obj.name)
+
+    def do_get_text(self):
+        return self.obj.name
+
+    def do_get_markup(self):
+        return self._highlight_match(self.match, self.obj.name)
+
+    def do_get_info(self):
+        return self.obj.get_type_name()
+
+
+class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
+                       ProviderMixin):
+
+    def __init__(self, worksheet):
+        super(DbObjectProvider, self).__init__()
+        self.worksheet = worksheet
+
+    def do_get_name(self):
+        return 'Database Objects'
+
+    def do_get_icon(self):
+        return None
+
+    def do_get_activation(self):
+        return (GtkSource.CompletionActivation.INTERACTIVE |
+                GtkSource.CompletionActivation.USER_REQUESTED)
+
+    def do_match(self, context):
+        return self.worksheet.connection is not None
+
+    def do_populate(self, context):
+        word = self._get_word(context)
+        proposals = []
+        candidates = self.worksheet.connection.schema.get_objects(
+            types=['table', 'view'])
+        for obj in candidates:
+            match = matches(word, obj.name)
+            if match is not None:
+                proposals.append(DbObjectProposal(obj, match))
+        proposals.sort(key=lambda x: (x.score, x.get_text()))
+        context.add_proposals(self, proposals, True)
