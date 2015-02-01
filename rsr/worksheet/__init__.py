@@ -90,8 +90,8 @@ class Worksheet(Gtk.VPaned):
             box.set_spacing(6)
             lbl = Gtk.Label()
             lbl.set_markup('Password required for <b>{}</b>.'.format(
-                           GObject.markup_escape_text(
-                                self.connection.get_label())))
+                GObject.markup_escape_text(
+                    self.connection.get_label())))
             box.pack_start(lbl, True, True, 0)
             entry = Gtk.Entry()
             entry.set_visibility(False)
