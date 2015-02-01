@@ -5,6 +5,8 @@ import uuid
 from gi.repository import GObject
 from xdg import BaseDirectory
 
+import keyring
+
 from rsr.connections.backends import get_available_drivers
 from rsr.connections.connection import Connection
 
@@ -34,7 +36,11 @@ class ConnectionManager(GObject.GObject):
             if key in self._connections:
                 self._connections[key].update_config(data[key])
             else:
-                conn = Connection(key, data[key])
+                config = data[key].copy()
+                password = keyring.get_password('runsqlrun', key)
+                if password is not None:
+                    config['password'] = password
+                conn = Connection(key, config)
                 self._connections[key] = conn
                 conn.start()
         # remove deleted connections
@@ -77,9 +83,12 @@ class ConnectionManager(GObject.GObject):
                 content = json.load(f)
         else:
             content = {}
+        password = data.pop('password', None)
         content[key] = data
         with open(CONNECTIONS_FILE, 'w') as f:
             json.dump(content, f)
+        if password is not None:
+            keyring.set_password('runsqlrun', key, password)
         self.update_connections()
         return key
 
