@@ -4,6 +4,7 @@ from gi.repository import Gtk, GtkSource, Pango
 import sqlparse
 
 from rsr import paths
+from rsr.worksheet.completion import SqlKeywordProvider
 
 
 class Editor(GtkSource.View):
@@ -34,7 +35,14 @@ class Editor(GtkSource.View):
         gutter = self.get_gutter(Gtk.TextWindowType.LEFT)
         gutter.insert(renderer, 1)
 
+        # Completions
+        self._setup_completions()
+
         self.buffer.connect('changed', self.on_buffer_changed)
+
+    def _setup_completions(self):
+        completion = self.get_completion()
+        completion.add_provider(SqlKeywordProvider())
 
     def on_buffer_changed(self, buf):
         sql = self.get_text()

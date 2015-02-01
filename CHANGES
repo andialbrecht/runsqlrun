@@ -1,6 +1,7 @@
 Development Version
 ===================
 
+* Add completions for SQL keywords.
 * Change shortcuts to switch editors to Ctrl+<number>.
 
 
