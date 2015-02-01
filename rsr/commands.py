@@ -91,6 +91,13 @@ commands = {
                 'callback': 'set_connection',
                 'args': [None]
             },
+            'format': {
+                'label': 'Format SQL',
+                'description': 'Format SQL statement at cursor',
+                'icon': 'format-indent-more-symbolic',
+                'shortcut': '<Alt>f',
+                'callback': 'editor.format_statement'
+            }
         }
     }
 }

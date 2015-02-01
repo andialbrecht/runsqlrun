@@ -78,7 +78,7 @@ class Editor(GtkSource.View):
     def set_text(self, text):
         self.get_buffer().set_text(text)
 
-    def get_statement_at_cursor(self):
+    def get_statement_iters_at_cursor(self):
         mark = self.buffer.get_insert()
         iter_start = self.buffer.get_iter_at_mark(mark)
         marks = self.buffer.get_source_marks_at_iter(iter_start, 'stmt_start')
@@ -86,12 +86,24 @@ class Editor(GtkSource.View):
             self.buffer.backward_iter_to_source_mark(iter_start, 'stmt_start')
         iter_end = iter_start.copy()
         self.buffer.forward_iter_to_source_mark(iter_end, 'stmt_end')
+        return iter_start, iter_end
+
+    def get_statement_at_cursor(self):
+        iter_start, iter_end = self.get_statement_iters_at_cursor()
         stmt = self.buffer.get_text(
             iter_start, iter_end, include_hidden_chars=False)
         stmt = stmt.strip()
         if not stmt:
             return None
         return stmt
+
+    def format_statement(self):
+        iter_start, iter_end = self.get_statement_iters_at_cursor()
+        stmt = self.buffer.get_text(
+            iter_start, iter_end, include_hidden_chars=False)
+        formatted = sqlparse.format(stmt, reindent=True, keyword_case='upper')
+        self.buffer.delete(iter_start, iter_end)
+        self.buffer.insert(iter_start, formatted)
 
 
 class StatementGutter(GtkSource.GutterRenderer):
