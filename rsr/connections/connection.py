@@ -15,6 +15,7 @@ class Connection(threading.Thread):
         self.queries = list()
         self.db = None
         self.keep_running = True
+        self._session_pwd = False
 
     def run(self):
         while self.keep_running:
@@ -30,6 +31,8 @@ class Connection(threading.Thread):
                 query.failed = True
                 query.error = str(err).strip()
                 GObject.idle_add(query.emit, 'finished')
+                # Reset session password
+                self._session_pwd = None
                 continue
             GObject.idle_add(query.emit, 'started')
             query.start_time = time.time()
@@ -48,6 +51,19 @@ class Connection(threading.Thread):
     def update_config(self, config):
         # TODO: if the connection is open something should happen...
         self.config = config
+
+    def requires_password(self):
+        password = self.config.get('password', None)
+        if password is None or not password.strip():
+            return True
+        return self._session_pwd is not None
+
+    def set_session_password(self, password):
+        self._session_pwd = True
+        self.config['password'] = password
+
+    def has_session_password(self):
+        return self._session_pwd
 
     def get_label(self):
         lbl = self.config.get('name')

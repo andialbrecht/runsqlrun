@@ -72,6 +72,40 @@ class Worksheet(Gtk.VPaned):
         dlg.destroy()
         return self.connection is not None
 
+    def assume_password(self):
+        if self.connection is None:
+            return False
+        result = True
+        if self.connection.requires_password():
+            result = False
+            dlg = Gtk.Dialog('Enter password', self.win,
+                             Gtk.DialogFlags.DESTROY_WITH_PARENT |
+                             Gtk.DialogFlags.MODAL,
+                             use_header_bar=True)
+            dlg.add_button('_Cancel', Gtk.ResponseType.CANCEL)
+            dlg.add_button('_Ok', Gtk.ResponseType.OK)
+            dlg.set_default_response(Gtk.ResponseType.OK)
+            box = dlg.get_content_area()
+            box.set_border_width(12)
+            box.set_spacing(6)
+            lbl = Gtk.Label()
+            lbl.set_markup('Password required for <b>{}</b>.'.format(
+                           GObject.markup_escape_text(
+                                self.connection.get_label())))
+            box.pack_start(lbl, True, True, 0)
+            entry = Gtk.Entry()
+            entry.set_visibility(False)
+            entry.set_invisible_char('*')
+            entry.connect(
+                'activate', lambda *a: dlg.response(Gtk.ResponseType.OK))
+            box.pack_start(entry, True, True, 0)
+            box.show_all()
+            if dlg.run() == Gtk.ResponseType.OK:
+                self.connection.set_session_password(entry.get_text())
+                result = True
+            dlg.destroy()
+        return result
+
     def set_connection(self, key):
         if key is None:
             self.connection = None
@@ -87,6 +121,8 @@ class Worksheet(Gtk.VPaned):
         if stmt is None:
             return
         if not self.assume_connection():
+            return
+        if not self.assume_password():
             return
         query = Query(stmt)
         self.results.set_query(query)

@@ -156,7 +156,10 @@ class ConnectionDialog(Gtk.Dialog):
 
     def on_edit_connection(self, *args):
         conn = self.get_connection()
-        self._update_form(conn.key, conn.config)
+        config = conn.config.copy()
+        if conn.has_session_password():
+            config.pop('password', None)
+        self._update_form(conn.key, config)
         self.on_show_form()
 
     def on_add_connection(self, *args):

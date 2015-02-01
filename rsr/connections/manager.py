@@ -88,7 +88,10 @@ class ConnectionManager(GObject.GObject):
         with open(CONNECTIONS_FILE, 'w') as f:
             json.dump(content, f)
         if password is not None:
-            keyring.set_password('runsqlrun', key, password)
+            data['password'] = password
+            conn = self.get_connection(key)
+            if not conn.has_session_password():
+                keyring.set_password('runsqlrun', key, password)
         self.update_connections()
         return key
 
