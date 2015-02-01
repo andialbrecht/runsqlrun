@@ -105,6 +105,26 @@ class Editor(GtkSource.View):
         self.buffer.delete(iter_start, iter_end)
         self.buffer.insert(iter_start, formatted)
 
+    def jump_next(self):
+        mark = self.buffer.get_insert()
+        iter_ = self.buffer.get_iter_at_mark(mark)
+        self.buffer.forward_iter_to_source_mark(iter_, 'stmt_start')
+        self.buffer.place_cursor(iter_)
+
+    def jump_prev(self):
+        mark = self.buffer.get_insert()
+        iter_ = self.buffer.get_iter_at_mark(mark)
+        sourcemarks = self.buffer.get_source_marks_at_iter(iter_)
+        self.buffer.backward_iter_to_source_mark(iter_, 'stmt_start')
+        if not sourcemarks:
+            # If there are any source marks the cursor was already
+            # placed at the beginning of a statement. In that case
+            # backward_iter_to_source_mark moved the iter to the previous
+            # statement already. Otherwise the first call moved the iter
+            # to the beginning of the current statement.
+            self.buffer.backward_iter_to_source_mark(iter_, 'stmt_start')
+        self.buffer.place_cursor(iter_)
+
 
 class StatementGutter(GtkSource.GutterRenderer):
 

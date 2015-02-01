@@ -97,7 +97,19 @@ commands = {
                 'icon': 'format-indent-more-symbolic',
                 'shortcut': '<Alt>f',
                 'callback': 'editor.format_statement'
-            }
+            },
+            'jump_next': {
+                'label': 'Next statement',
+                'description': 'Jump to next statement',
+                'shortcut': '<Alt><Shift>Down',
+                'callback': 'editor.jump_next'
+            },
+            'jump_prev': {
+                'label': 'Previous statement',
+                'description': 'Jump to previous statement',
+                'shortcut': '<Alt><Shift>Up',
+                'callback': 'editor.jump_prev'
+            },
         }
     }
 }
