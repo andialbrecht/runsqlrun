@@ -1,5 +1,5 @@
-Development Version
-===================
+Version 0.2.0 (2015-02-01)
+==========================
 
 * Format SQL statement at cursor (Alt+F).
 * Jump to next/previous statement (Alt+Shift+Down, Alt+Shift+Up).
