@@ -256,6 +256,7 @@ class ConnectionIndicator(Gtk.Box):
         self._editor = None
         self._sig_conn_changed = None
         self._sig_query_changed = None
+        self._sig_connstate_changed = None
         self.win.docview.connect('switch-page', self.on_editor_changed)
         self.win.docview.connect('page-removed', self.on_page_removed)
 
@@ -285,12 +286,21 @@ class ConnectionIndicator(Gtk.Box):
             self.lbl_conn.set_text('[Not connected]')
             self.win.headerbar.set_subtitle('Database Query Tool')
         else:
-            self.lbl_conn.set_text(editor.connection.get_label())
+            lbl = editor.connection.get_label()
+            if editor.connection.is_open():
+                state = Gtk.StateType.NORMAL
+            else:
+                state = Gtk.StateType.INSENSITIVE
+                lbl += ' - Not connected'
+            self.lbl_conn.set_state(state)
+            self.lbl_conn.set_text(lbl)
             subtitle = editor.connection.get_label()
             if editor.connection.config.get('description'):
                 subtitle += ' · {}'.format(
                     editor.connection.config['description'])
             self.win.headerbar.set_subtitle(subtitle)
+            editor.connection.connect(
+                'state-changed', lambda *a: self.on_connection_changed(editor))
 
     def on_query_changed(self, editor):
         if editor is None:

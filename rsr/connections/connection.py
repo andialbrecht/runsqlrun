@@ -7,10 +7,15 @@ from rsr.connections import backends
 from rsr.schema.provider import SchemaProvider
 
 
-class Connection(threading.Thread):
+class Connection(GObject.GObject, threading.Thread):
+
+    __gsignals__ = {
+        'state-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
+    }
 
     def __init__(self, key, config):
-        super(Connection, self).__init__()
+        GObject.GObject.__init__(self)
+        threading.Thread.__init__(self)
         self.key = key
         self.config = config
         self.queries = list()
@@ -49,6 +54,11 @@ class Connection(threading.Thread):
             GObject.idle_add(query.emit, 'finished')
         if self.db is not None:
             self.db.close()
+            self.db = None
+            self.emit('state-changed')
+
+    def is_open(self):
+        return self.db is not None
 
     def update_config(self, config):
         # TODO: if the connection is open something should happen...
@@ -88,6 +98,7 @@ class Connection(threading.Thread):
             if not self.db.connect():
                 self.db = None
             self.schema.refresh()
+            self.emit('state-changed')
         return self.db is not None
 
     def run_query(self, query):
