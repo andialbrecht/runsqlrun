@@ -17,7 +17,7 @@ class Connection(threading.Thread):
         self.db = None
         self.schema = SchemaProvider(self)
         self.keep_running = True
-        self._session_pwd = False
+        self._session_pwd_set = False
 
     def run(self):
         while self.keep_running:
@@ -57,11 +57,11 @@ class Connection(threading.Thread):
     def requires_password(self):
         password = self.config.get('password', None)
         if password is None or not password.strip():
-            return True
-        return self._session_pwd is not None
+            return not self._session_pwd_set
+        return False
 
     def set_session_password(self, password):
-        self._session_pwd = True
+        self._session_pwd_set = True
         self.config['password'] = password
 
     def has_session_password(self):
