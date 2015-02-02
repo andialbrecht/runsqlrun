@@ -91,6 +91,12 @@ commands = {
                 'callback': 'set_connection',
                 'args': [None]
             },
+            'openconnection': {
+                'label': 'Open assigned connection',
+                'description': 'Opens the currently assigned connection',
+                'shortcut': 'F11',
+                'callback': 'open_connection',
+            },
             'format': {
                 'label': 'Format SQL',
                 'description': 'Format SQL statement at cursor',

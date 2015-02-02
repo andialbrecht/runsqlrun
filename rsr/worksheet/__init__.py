@@ -106,6 +106,13 @@ class Worksheet(Gtk.VPaned):
             dlg.destroy()
         return result
 
+    def open_connection(self):
+        if not self.assume_connection():
+            return
+        if not self.assume_password():
+            return
+        self.connection.request_open()
+
     def set_connection(self, key):
         if key is None:
             self.connection = None

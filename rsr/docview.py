@@ -84,6 +84,8 @@ WELCOME_MSG = """/* Start typing your SQL here.
     Ctrl+Enter  Run statement at cursor
             F9  Choose or add a database connection
            F10  Disconnect from database
+           F11  Open db connection without executing a query
+                This is needed to have completions for database objects.
         Ctrl+W  Close current SQL editor
         Ctrl+Q  Close RunSQLRun
 

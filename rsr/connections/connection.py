@@ -23,9 +23,17 @@ class Connection(GObject.GObject, threading.Thread):
         self.schema = SchemaProvider(self)
         self.keep_running = True
         self._session_pwd_set = False
+        self._connect_request = False
 
     def run(self):
         while self.keep_running:
+            if self._connect_request:
+                try:
+                    if not self.open():
+                        continue
+                except Exception:
+                    pass
+                self._connect_request = False
             if not self.queries:
                 time.sleep(.05)
                 continue
@@ -100,6 +108,10 @@ class Connection(GObject.GObject, threading.Thread):
             self.schema.refresh()
             self.emit('state-changed')
         return self.db is not None
+
+    def request_open(self):
+        """This is called from the main thread to open a connection."""
+        self._connect_request = True
 
     def run_query(self, query):
         self.queries.append(query)
