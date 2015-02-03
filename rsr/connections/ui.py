@@ -5,18 +5,23 @@ from gi.repository import Gtk, GObject, Gio
 
 class ConnectionDialog(Gtk.Dialog):
 
-    def __init__(self, win):
+    def __init__(self, win, title='Choose Connection',
+                 show_header_buttons=True):
         self.win = win
         self.app = win.app
         super(ConnectionDialog, self).__init__(
-            'Choose Connection', win,
+            title, win,
             Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
             use_header_bar=True)
 
         # Response buttons
-        self._btn_cancel = self.add_button('_Cancel', Gtk.ResponseType.CANCEL)
-        self._btn_choose = self.add_button('_Connect', Gtk.ResponseType.OK)
-        self.set_default_response(Gtk.ResponseType.OK)
+        if show_header_buttons:
+            self._btn_cancel = self.add_button('_Cancel',
+                                               Gtk.ResponseType.CANCEL)
+            self._btn_choose = self.add_button('_Connect', Gtk.ResponseType.OK)
+            self.set_default_response(Gtk.ResponseType.OK)
+        else:
+            self._btn_choose = self._btn_cancel = None
 
         hb = self.get_header_bar()
         self._btn_form_back = Gtk.Button()
@@ -211,15 +216,17 @@ class ConnectionDialog(Gtk.Dialog):
 
     def on_show_form(self, *args):
         self.stack.set_visible_child_name('form')
-        self._btn_choose.set_sensitive(False)
-        self._btn_cancel.hide()
+        if self._btn_choose is not None:
+            self._btn_choose.set_sensitive(False)
+            self._btn_cancel.hide()
         self._btn_form_back.show()
         self.builder.get_object('name').grab_focus()
 
     def on_show_list(self, *args):
         self.stack.set_visible_child_name('list')
-        self._btn_choose.set_sensitive(True)
-        self._btn_cancel.show()
+        if self._btn_choose is not None:
+            self._btn_choose.set_sensitive(True)
+            self._btn_cancel.show()
         self._btn_form_back.hide()
 
     def on_connlist_row_activated(self, treeview, path, column):
@@ -227,7 +234,8 @@ class ConnectionDialog(Gtk.Dialog):
 
     def on_selected_conn_changed(self, selection):
         enabled = selection.count_selected_rows() != 0
-        self._btn_choose.set_sensitive(enabled)
+        if self._btn_choose is not None:
+            self._btn_choose.set_sensitive(enabled)
         self.builder.get_object('btn_delete').set_sensitive(enabled)
         self.builder.get_object('btn_edit').set_sensitive(enabled)
 
