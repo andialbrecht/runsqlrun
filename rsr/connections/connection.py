@@ -22,7 +22,7 @@ class Connection(GObject.GObject, threading.Thread):
         self.db = None
         self.schema = SchemaProvider(self)
         self.keep_running = True
-        self._session_pwd_set = False
+        self._session_pwd = False
         self._connect_request = False
 
     def run(self):
