@@ -10,7 +10,7 @@ except ImportError as err:
 
 class OracleSchema(BaseSchemaProvider):
 
-    def refresh_tables(self, schema, cb):
+    def refresh(self, schema):
         for table in self.driver.execute_raw(SQL_TABLES).fetchall():
             schema.add_object(dbo.Table(table[0], table[0]))
 

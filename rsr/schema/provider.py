@@ -14,7 +14,7 @@ class SchemaProvider:
     def refresh(self):
         if self.backend is None:
             return
-        self.backend.refresh_tables(self, lambda: None)
+        self.backend.refresh(self)
 
     def add_object(self, obj):
         self._objects[obj.uid] = obj
