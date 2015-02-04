@@ -1,5 +1,5 @@
 import cairo
-from gi.repository import Gtk, GtkSource, Pango
+from gi.repository import Gtk, GtkSource, Pango, GObject
 
 import sqlparse
 
@@ -9,10 +9,15 @@ from rsr.worksheet.completion import SqlKeywordProvider, DbObjectProvider
 
 class Editor(GtkSource.View):
 
+    __gsignals__ = {
+        'parsed-statement-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
+    }
+
     def __init__(self, worksheet):
         super(Editor, self).__init__()
         self.buffer = GtkSource.Buffer()
         self.worksheet = worksheet
+        self._parsed = None
 
         sm = GtkSource.StyleSchemeManager()
         sm.append_search_path(paths.theme_dir)
@@ -43,7 +48,7 @@ class Editor(GtkSource.View):
 
     def _setup_completions(self):
         completion = self.get_completion()
-        completion.add_provider(DbObjectProvider(self.worksheet))
+        completion.add_provider(DbObjectProvider(self))
         completion.add_provider(SqlKeywordProvider())
 
     def on_buffer_changed(self, buf):
@@ -58,17 +63,24 @@ class Editor(GtkSource.View):
         buf.remove_source_marks(start, end, 'stmt_start')
         buf.remove_source_marks(start, end, 'stmt_end')
 
+        cur_pos = buf.get_iter_at_mark(buf.get_insert()).get_offset()
+
         offset = 0
         for statement in statements:
             # Remove leading and trailing whitespaces and recalculate offset.
             lstripped = statement.lstrip()
             offset += len(statement) - len(lstripped)
+            offset_start = offset
             statement = lstripped.rstrip()
             iter_ = buf.get_iter_at_offset(offset)
             buf.create_source_mark(None, 'stmt_start', iter_)
             offset += len(statement)
             iter_ = buf.get_iter_at_offset(offset)
             buf.create_source_mark(None, 'stmt_end', iter_)
+            if offset_start <= cur_pos <= offset:
+                parsed = sqlparse.parse(statement)[0]
+                self._parsed = parsed
+                self.emit('parsed-statement-changed')
 
     def get_cursor_position(self):
         mark = self.buffer.get_insert()
@@ -134,6 +146,9 @@ class Editor(GtkSource.View):
             # to the beginning of the current statement.
             self.buffer.backward_iter_to_source_mark(iter_, 'stmt_start')
         self.buffer.place_cursor(iter_)
+
+    def get_parsed_statement(self):
+        return self._parsed
 
 
 class StatementGutter(GtkSource.GutterRenderer):

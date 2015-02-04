@@ -152,9 +152,12 @@ class DbObjectProposal(GObject.GObject, GtkSource.CompletionProposal,
 class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
                        ProviderMixin):
 
-    def __init__(self, worksheet):
+    def __init__(self, editor):
         super(DbObjectProvider, self).__init__()
-        self.worksheet = worksheet
+        self.worksheet = editor.worksheet
+        self._identifiers = {}
+        editor.connect(
+            'parsed-statement-changed', self.on_parsed_statement_changed)
 
     def do_get_name(self):
         return 'Database Objects'
@@ -172,11 +175,30 @@ class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
     def do_populate(self, context):
         word = self._get_word(context)
         proposals = []
+        tables_in_query = []
+        known_identifiers = set(map(str.lower, self._identifiers.values()))
+        print(known_identifiers)
         candidates = self.worksheet.connection.schema.get_objects(
             types=['table', 'view'])
         for obj in candidates:
             match = matches(word, obj.name)
             if match is not None:
                 proposals.append(DbObjectProposal(obj, match))
+            if obj.name.lower() in known_identifiers:
+                tables_in_query.append(obj)
+        print(tables_in_query)
         proposals.sort(key=lambda x: (x.score, x.get_text()))
         context.add_proposals(self, proposals, True)
+
+    def on_parsed_statement_changed(self, editor):
+        parsed = editor.get_parsed_statement()
+        if parsed is None:
+            self._identifiers = {}
+            return
+        identifiers = {}
+        for token in parsed.tokens:
+            if isinstance(token, sqlparse.sql.Identifier):
+                identifiers[token.get_name()] = token.get_real_name()
+                if token.get_alias() is not None:
+                    identifiers[token.get_alias()] = token.get_real_name()
+        self._identifiers = identifiers
