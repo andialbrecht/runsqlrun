@@ -290,7 +290,7 @@
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkTextView" id="textview1">
+                  <object class="GtkTextView" id="cmd_ssh">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                   </object>

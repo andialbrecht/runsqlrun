@@ -9,6 +9,8 @@ class BaseDriver:
 
     @property
     def schema(self):
+        if self.schema_class is None:
+            return
         return self.schema_class(self)
 
     def get_connect_params(self):
@@ -25,9 +27,12 @@ class BaseDriver:
             self._conn.close()
             self._conn = None
 
+    def prepare_sql(self, sql):
+        return sql
+
     def execute(self, query):
         cur = self._conn.cursor()
-        cur.execute(query.sql)
+        cur.execute(self.prepare_sql(query.sql))
         query.description = cur.description
         query.result = cur.fetchall()
         cur.close()

@@ -175,9 +175,11 @@ class ConnectionDialog(Gtk.Dialog):
         for field in ('name', 'description', 'host', 'port',
                       'username', 'password', 'db'):
             widget = self.builder.get_object(field)
-            widget.set_text(config.get(field, ''))
+            widget.set_text(str(config.get(field, '')))
         self.builder.get_object('driver_combo').set_active_id(
             config.get('driver', None))
+        self.builder.get_object('cmd_ssh').get_buffer().set_text(
+            config.get('cmd_ssh', ''))
         self._edit_key = key
 
     def on_delete_connection(self, *args):
@@ -212,6 +214,9 @@ class ConnectionDialog(Gtk.Dialog):
                 data[field] = value
         data['driver'] = self.builder.get_object(
             'driver_combo').get_active_id()
+        buf = self.builder.get_object('cmd_ssh').get_buffer()
+        data['cmd_ssh'] = buf.get_text(*buf.get_bounds(),
+                                       include_hidden_chars=False)
         return data
 
     def on_show_form(self, *args):

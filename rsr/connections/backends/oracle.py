@@ -16,7 +16,13 @@ class Driver(BaseDriver):
                                     self.config['db'])
         else:
             dsn = self.config['db']
-        conn_str = '%s/%s@%s' % (self.config.get('user'),
+        conn_str = '%s/%s@%s' % (self.config.get('username'),
                                  self.config.get('password'),
                                  dsn)
         return (conn_str,), {}
+
+    def prepare_sql(self, sql):
+        sql = sql.strip()
+        if sql.endswith(';'):
+            sql = sql[:-1]
+        return sql

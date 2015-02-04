@@ -4,6 +4,10 @@ Development Version
 * Add completions for SQL keywords.
 * Add completions for tables.
 * Change shortcuts to switch editors to Ctrl+<number>.
+* Add preliminary support for Oracle databases.
+* Support for SSH tunnels when opening a connection.
+  A shell command is executed in a subprocess. The command
+  doesn't accept any input for now.
 
 
 Version 0.2.0 (2015-02-01)

@@ -12,6 +12,8 @@ class SchemaProvider:
             return self.connection.db.schema
 
     def refresh(self):
+        if self.backend is None:
+            return
         self.backend.refresh_tables(self, lambda: None)
 
     def add_object(self, obj):

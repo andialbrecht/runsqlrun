@@ -1,3 +1,5 @@
+import shlex
+import subprocess
 import threading
 import time
 
@@ -22,7 +24,8 @@ class Connection(GObject.GObject, threading.Thread):
         self.db = None
         self.schema = SchemaProvider(self)
         self.keep_running = True
-        self._session_pwd = False
+        self._tunnel_proc = None
+        self._session_pwd_set = False
         self._connect_request = False
 
     def run(self):
@@ -62,6 +65,7 @@ class Connection(GObject.GObject, threading.Thread):
             GObject.idle_add(query.emit, 'finished')
         if self.db is not None:
             self.db.close()
+            self._close_tunnel()
             self.db = None
             self.emit('state-changed')
 
@@ -83,7 +87,7 @@ class Connection(GObject.GObject, threading.Thread):
         self.config['password'] = password
 
     def has_session_password(self):
-        return self._session_pwd
+        return self._session_pwd_set
 
     def get_label(self):
         lbl = self.config.get('name')
@@ -100,9 +104,24 @@ class Connection(GObject.GObject, threading.Thread):
                 lbl = self.key
         return lbl
 
+    def _open_tunnel(self):
+        if not self.config.get('cmd_ssh'):
+            return
+        if self._tunnel_proc is None:
+            self._tunnel_proc = subprocess.Popen(
+                shlex.split(self.config['cmd_ssh']),
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            time.sleep(1)  # maybe paramiko is a better solution here?
+
+    def _close_tunnel(self):
+        if self._tunnel_proc is not None:
+            self._tunnel_proc.kill()
+            self._tunnel_proc = None
+
     def open(self):
         if self.db is None:
             self.db = backends.get_backend(self.config)
+            self._open_tunnel()
             if not self.db.connect():
                 self.db = None
             self.schema.refresh()
