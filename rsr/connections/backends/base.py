@@ -39,5 +39,5 @@ class BaseDriver:
 
     def execute_raw(self, sql):
         cur = self._conn.cursor()
-        cur.execute(sql)
+        cur.execute(self.prepare_sql(sql))
         return cur
