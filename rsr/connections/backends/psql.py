@@ -13,12 +13,12 @@ class PsqlSchema(BaseSchemaProvider):
     def refresh(self, schema):
         tables = {}
         for table in self.driver.execute_raw(SQL_TABLES):
-            table = dbo.Table(table[0], table[1], table[2])
-            schema.add_object(table)
-            tables[tables[0]] = table
+            t = dbo.Table(table[0], table[1], table[2])
+            schema.add_object(t)
+            tables[table[0]] = t
         for col in self.driver.execute_raw(SQL_COLUMNS):
             table = tables[col[0]]
-            col = dbo.Column(col[1], col[2], col[3], order=col[4])
+            col = dbo.Column(col[1], col[2], description=col[3], order=col[4])
             table.add_column(col)
 
 

@@ -27,11 +27,11 @@ class Table(DbObject):
         return cols
 
     def add_column(self, col):
-        self._columns[col.oid] = col
+        self._columns[col.uid] = col
 
 
 class Column(DbObject):
 
     def __init__(self, *args, **kwargs):
         self.order = kwargs.pop('order', 0)
-        super(Column, self).__init__(self, *args, **kwargs)
+        super(Column, self).__init__(*args, **kwargs)
