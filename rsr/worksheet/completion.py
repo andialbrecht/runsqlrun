@@ -38,7 +38,7 @@ class ProviderMixin:
         while not start_iter.starts_line():
             start_iter.backward_char()
             char = start_iter.get_char()
-            if not char.isalnum() and char not in ['_']:
+            if not (char.isalnum() or char in '_.'):
                 start_iter.forward_char()
                 break
         word = end_iter.get_buffer().get_text(start_iter, end_iter, False)
@@ -137,7 +137,7 @@ class DbObjectProposal(GObject.GObject, GtkSource.CompletionProposal,
         super(DbObjectProposal, self).__init__()
         self.obj = obj
         self.match = match
-        self.score = self._calc_score(match, obj.name)
+        self.score = self._calc_score(match, self.obj.name)
 
     def do_get_text(self):
         return self.obj.name
@@ -177,7 +177,6 @@ class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
         proposals = []
         tables_in_query = []
         known_identifiers = set(map(str.lower, self._identifiers.values()))
-        print(known_identifiers)
         candidates = self.worksheet.connection.schema.get_objects(
             types=['table', 'view'])
         for obj in candidates:
@@ -186,7 +185,17 @@ class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
                 proposals.append(DbObjectProposal(obj, match))
             if obj.name.lower() in known_identifiers:
                 tables_in_query.append(obj)
-        print(tables_in_query)
+        # add alias completions (columns)
+        if word is not None and '.' in word:
+            alias, rest = word.split('.', 1)
+            real_name = self._identifiers.get(alias, None)
+            if real_name is not None:
+                for table in tables_in_query:
+                    if table.name.lower() == real_name:
+                        for col in table.columns:
+                            match = matches(rest, col.name)
+                            if match is not None:
+                                proposals.append(DbObjectProposal(col, match))
         proposals.sort(key=lambda x: (x.score, x.get_text()))
         context.add_proposals(self, proposals, True)
 
@@ -197,7 +206,8 @@ class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
             return
         identifiers = {}
         for token in parsed.tokens:
-            if isinstance(token, sqlparse.sql.Identifier):
+            if isinstance(token, sqlparse.sql.Identifier) \
+               and token.get_real_name() is not None:
                 identifiers[token.get_name()] = token.get_real_name()
                 if token.get_alias() is not None:
                     identifiers[token.get_alias()] = token.get_real_name()

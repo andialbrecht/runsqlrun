@@ -22,7 +22,7 @@ class Table(DbObject):
 
     @property
     def columns(self):
-        cols = self._columns.values()
+        cols = list(self._columns.values())
         cols.sort(key=lambda k: k.order)
         return cols
 
