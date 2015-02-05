@@ -180,30 +180,51 @@ class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
         candidates = self.worksheet.connection.schema.get_objects(
             types=['table', 'view'])
         for obj in candidates:
-            match = matches(word, obj.name)
-            if match is not None:
-                proposals.append(DbObjectProposal(obj, match))
+            self._add_match(proposals, word, obj.name, obj)
             if obj.name.lower() in known_identifiers:
                 tables_in_query.append(obj)
         # add alias completions (columns)
-        if word is not None and '.' in word:
-            alias, rest = word.split('.', 1)
-            real_name = self._identifiers.get(alias, None)
-            if real_name is not None:
-                for table in tables_in_query:
-                    if table.name.lower() == real_name:
-                        for col in table.columns:
-                            match = matches(rest, col.name)
-                            if match is not None:
-                                proposals.append(DbObjectProposal(col, match))
-        elif word is not None:
-            for table in tables_in_query:
-                for col in table.columns:
-                    match = matches(word, col.name)
-                    if match is not None:
-                        proposals.append(DbObjectProposal(col, match))
+        if word is not None:
+            if '.' in word:
+                check_word = word.split('.', 1)[-1]
+            else:
+                check_word = word
+            for col in self._get_column_candidates(word, tables_in_query):
+                self._add_match(proposals, check_word, col.name, col)
         proposals.sort(key=lambda x: (x.score, x.get_text()))
         context.add_proposals(self, proposals, True)
+
+    def _add_match(self, proposals, word, completion, obj):
+        """Adds a proposal for obj if word matches completion."""
+        match = matches(word, completion)
+        if match is not None:
+            proposals.append(DbObjectProposal(obj, match))
+
+    def _get_column_candidates(self, word, tables_in_query):
+        """Returns a list of columns.
+
+        This function takes into account that word is None (-> empty list)
+        and that word contains an alias for a table.
+        """
+        if word is None:
+            return []
+        if '.' in word:
+            alias, rest = word.split('.', 1)
+            real_name = self._identifiers.get(alias, None)
+            if real_name is None:
+                return []
+
+            # A predicate function is still needed. A single table could
+            # be referenced more that once with different aliases.
+            def predicate(t):
+                return t.name.lower() == real_name.lower()
+        else:
+            def predicate(t):
+                return True
+        columns = []
+        for table in filter(predicate, tables_in_query):
+            columns.extend(table.columns)
+        return columns
 
     def on_parsed_statement_changed(self, editor):
         parsed = editor.get_parsed_statement()
