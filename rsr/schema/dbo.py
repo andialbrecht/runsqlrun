@@ -15,3 +15,23 @@ class DbObject:
 class Table(DbObject):
     type_key = 'table'
     type_name = 'Table'
+
+    def __init__(self, *args, **kwargs):
+        super(Table, self).__init__(*args, **kwargs)
+        self._columns = {}
+
+    @property
+    def columns(self):
+        cols = self._columns.values()
+        cols.sort(key=lambda k: k.order)
+        return cols
+
+    def add_column(self, col):
+        self._columns[col.oid] = col
+
+
+class Column(DbObject):
+
+    def __init__(self, *args, **kwargs):
+        self.order = kwargs.pop('order', 0)
+        super(Column, self).__init__(self, *args, **kwargs)

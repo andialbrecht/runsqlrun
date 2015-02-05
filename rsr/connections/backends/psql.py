@@ -11,8 +11,15 @@ except ImportError:
 class PsqlSchema(BaseSchemaProvider):
 
     def refresh(self, schema):
+        tables = {}
         for table in self.driver.execute_raw(SQL_TABLES):
-            schema.add_object(dbo.Table(table[0], table[1], table[2]))
+            table = dbo.Table(table[0], table[1], table[2])
+            schema.add_object(table)
+            tables[tables[0]] = table
+        for col in self.driver.execute_raw(SQL_COLUMNS):
+            table = tables[col[0]]
+            col = dbo.Column(col[1], col[2], col[3], order=col[4])
+            table.add_column(col)
 
 
 class Driver(BaseDriver):
@@ -24,7 +31,7 @@ class Driver(BaseDriver):
         kwargs = {}
         kwargs['host'] = self.config.get('host', 'localhost')
         kwargs['port'] = self.config.get('port', 5432)
-        kwargs['user'] = self.config.get('user', None)
+        kwargs['user'] = self.config.get('username', None)
         kwargs['password'] = self.config.get('password', None)
         kwargs['dbname'] = self.config.get('db', None)
         return args, kwargs
@@ -53,7 +60,8 @@ SQL_COLUMNS = """
 select a.attrelid,
        a.attrelid || '-' || a.attnum as uid,
                             a.attname,
-                            d.description
+                            d.description,
+                            a.attnum
 from pg_catalog.pg_attribute a
 JOIN pg_catalog.pg_class c on c.oid = a.attrelid
 join pg_catalog.pg_namespace n on n.oid = c.relnamespace
