@@ -20,6 +20,7 @@ In addition you'll need to install a database driver for
 each database management system you'd like to connect to:
 
 - PostgreSQL: python3-pscopg2
+- Oracle: cx_Oracle
 
 
 Run RunSQLRun
