@@ -11,8 +11,16 @@ except ImportError as err:
 class OracleSchema(BaseSchemaProvider):
 
     def refresh(self, schema):
+        tables = {}
         for table in self.driver.execute_raw(SQL_TABLES).fetchall():
-            schema.add_object(dbo.Table(table[0], table[0]))
+            t = dbo.Table(table[0], table[0])
+            schema.add_object(t)
+            tables[t.uid] = t
+        for col in self.driver.execute_raw(SQL_COLUMNS):
+            table = tables[col[0]]
+            uid = '{}#{}'.format(col[0], col[1])
+            col = dbo.Column(uid, col[1], order=col[2])
+            table.add_column(col)
 
 
 class Driver(BaseDriver):
