@@ -196,6 +196,12 @@ class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
                             match = matches(rest, col.name)
                             if match is not None:
                                 proposals.append(DbObjectProposal(col, match))
+        elif word is not None:
+            for table in tables_in_query:
+                for col in table.columns:
+                    match = matches(word, col.name)
+                    if match is not None:
+                        proposals.append(DbObjectProposal(col, match))
         proposals.sort(key=lambda x: (x.score, x.get_text()))
         context.add_proposals(self, proposals, True)
 
