@@ -2,7 +2,7 @@ Development Version
 ===================
 
 * Add completions for SQL keywords.
-* Add completions for tables.
+* Add completions for tables and columns.
 * Change shortcuts to switch editors to Ctrl+<number>.
 * Add preliminary support for Oracle databases.
 * Support for SSH tunnels when opening a connection.
