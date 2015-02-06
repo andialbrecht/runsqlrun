@@ -90,7 +90,7 @@ class ConnectionManager(GObject.GObject):
         if password is not None:
             data['password'] = password
             conn = self.get_connection(key)
-            if not conn.has_session_password():
+            if not (conn and conn.has_session_password()):
                 keyring.set_password('runsqlrun', key, password)
         self.update_connections()
         return key
