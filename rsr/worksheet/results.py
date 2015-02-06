@@ -59,9 +59,11 @@ class DataList(Gtk.TreeView):
         self.results.set_current_page(0)
 
     def clear_results(self):
+        model = self.get_model()
+        del model
+        self.set_model(None)
         for column in self.get_columns():
             self.remove_column(column)
-        self.set_model(None)
 
 
 class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
