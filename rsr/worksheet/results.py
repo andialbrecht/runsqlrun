@@ -142,7 +142,8 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
 
     def do_get_flags(self):
         """Returns the flags supported by this interface."""
-        return Gtk.TreeModelFlags.ITERS_PERSIST
+        return (Gtk.TreeModelFlags.ITERS_PERSIST
+                | Gtk.TreeModelFlags.LIST_ONLY)
 
 
 class QueryLog(Gtk.TreeView):
