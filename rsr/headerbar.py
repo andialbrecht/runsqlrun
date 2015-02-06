@@ -45,6 +45,6 @@ class HeaderBar(Gtk.HeaderBar):
         self.win.docview.add_worksheet()
 
     def on_manage_connections(self, *args):
-        dlg = ConnectionDialog(self.win, 'Manage Connections', False)
+        dlg = ConnectionDialog(self.win, mode=ConnectionDialog.MODE_MANAGE)
         dlg.run()
         dlg.destroy()

@@ -5,10 +5,19 @@ from gi.repository import Gtk, GObject, Gio
 
 class ConnectionDialog(Gtk.Dialog):
 
-    def __init__(self, win, title='Choose Connection',
-                 show_header_buttons=True):
+    MODE_MANAGE = 1
+    MODE_CHOOSE = 2
+
+    def __init__(self, win, mode=MODE_CHOOSE):
         self.win = win
         self.app = win.app
+        self.mode = mode
+        if mode == self.MODE_CHOOSE:
+            title = 'Choose Connection'
+            show_header_buttons = True
+        else:
+            title = 'Manage Connections'
+            show_header_buttons = False
         super(ConnectionDialog, self).__init__(
             title, win,
             Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
@@ -235,7 +244,10 @@ class ConnectionDialog(Gtk.Dialog):
         self._btn_form_back.hide()
 
     def on_connlist_row_activated(self, treeview, path, column):
-        self.response(Gtk.ResponseType.OK)
+        if self.mode == self.MODE_CHOOSE:
+            self.response(Gtk.ResponseType.OK)
+        else:
+            self.on_edit_connection()
 
     def on_selected_conn_changed(self, selection):
         enabled = selection.count_selected_rows() != 0
