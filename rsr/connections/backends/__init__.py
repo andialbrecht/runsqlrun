@@ -6,6 +6,7 @@ DriverSpec = namedtuple('DriverSpec', 'key, name, module')
 DRIVERS = [
     DriverSpec('psql', 'PostgreSQL', 'psycopg2'),
     DriverSpec('mysql', 'MariaDB / MySQL', 'mysql.connector'),
+    DriverSpec('sqlite', 'SQLite3', 'sqlite3'),
     DriverSpec('oracle', 'Oracle', 'cx_Oracle'),
 ]
 
@@ -20,6 +21,9 @@ def get_backend(config):
     elif config.get('driver', None) == 'oracle':
         from rsr.connections.backends import oracle
         return oracle.Driver(config)
+    elif config.get('driver', None) == 'sqlite':
+        from rsr.connections.backends import sqlite
+        return sqlite.Driver(config)
     else:
         raise NotImplementedError()
 

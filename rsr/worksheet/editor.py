@@ -78,8 +78,11 @@ class Editor(GtkSource.View):
             iter_ = buf.get_iter_at_offset(offset)
             buf.create_source_mark(None, 'stmt_end', iter_)
             if offset_start <= cur_pos <= offset:
-                parsed = sqlparse.parse(statement)[0]
-                self._parsed = parsed
+                parsed = sqlparse.parse(statement)
+                if parsed:
+                    self._parsed = parsed[0]
+                else:
+                    self._parsed = None
                 self.emit('parsed-statement-changed')
 
     def get_cursor_position(self):
