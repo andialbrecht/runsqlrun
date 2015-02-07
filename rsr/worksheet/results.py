@@ -49,7 +49,7 @@ class DataList(Gtk.TreeView):
             renderer = Gtk.CellRendererText()
             renderer.set_property('ellipsize', Pango.EllipsizeMode.END)
             col = Gtk.TreeViewColumn(
-                item[0].replace('_', '__'), renderer, text=idx)
+                item[0].replace('_', '__'), renderer, markup=idx)
             col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
             col.set_fixed_width(100)
             col.set_resizable(True)
@@ -75,6 +75,10 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
             self._n_columns = len(self.data[0])
         else:
             self._n_columns = 0
+        lbl = Gtk.Label()
+        context = lbl.get_style_context()
+        col = context.get_color(Gtk.StateFlags.INSENSITIVE)
+        self._col_insensitive_str = col.to_color().to_string()
         GObject.GObject.__init__(self)
 
     def do_get_iter(self, path):
@@ -126,12 +130,20 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
 
     def do_get_value(self, iter_, column):
         """Returns the value for iter and column."""
-        data = str(self.data[iter_.user_data][column])
-        lines = data.splitlines()
-        if lines:
-            return lines[0]
+        value = self.data[iter_.user_data][column]
+        if value is None:
+            return self._markup_none(value)
         else:
-            return data
+            data = str(value)
+            lines = data.splitlines()
+            if lines:
+                return GObject.markup_escape_text(lines[0])
+            else:
+                return GObject.markup_escape_text(data)
+
+    def _markup_none(self, value):
+        return '<span color="{}">&lt;NULL&gt;</span>'.format(
+            self._col_insensitive_str)
 
     def do_get_n_columns(self):
         """Returns the number of columns."""
