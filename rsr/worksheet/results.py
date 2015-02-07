@@ -45,11 +45,20 @@ class DataList(Gtk.TreeView):
     def on_query_finished(self, query):
         if query.failed:
             return
+        renderer = Gtk.CellRendererText()
+        renderer.set_alignment(1, .5)
+        renderer.set_property('weight', Pango.Weight.BOLD)
+        col = Gtk.TreeViewColumn('#', renderer, markup=0)
+        col.set_property('alignment', 1)
+        col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+        col.set_fixed_width(50)
+        col.set_resizable(True)
+        self.append_column(col)
         for idx, item in enumerate(query.description):
             renderer = Gtk.CellRendererText()
             renderer.set_property('ellipsize', Pango.EllipsizeMode.END)
             col = Gtk.TreeViewColumn(
-                item[0].replace('_', '__'), renderer, markup=idx)
+                item[0].replace('_', '__'), renderer, markup=idx + 1)
             col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
             col.set_fixed_width(100)
             col.set_resizable(True)
@@ -130,7 +139,9 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
 
     def do_get_value(self, iter_, column):
         """Returns the value for iter and column."""
-        value = self.data[iter_.user_data][column]
+        if column == 0:
+            return self._markup_rownum(iter_.user_data + 1)
+        value = self.data[iter_.user_data][column - 1]
         if value is None:
             return self._markup_none(value)
         elif isinstance(value, memoryview):
@@ -142,6 +153,10 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
                 return GObject.markup_escape_text(lines[0])
             else:
                 return GObject.markup_escape_text(data)
+
+    def _markup_rownum(self, value):
+        return '<span color="{}">{}</span>'.format(
+            self._col_insensitive_str, value)
 
     def _markup_none(self, value):
         return '<span color="{}">NULL</span>'.format(
