@@ -1,6 +1,6 @@
 import time
 
-from gi.repository import Gtk, GObject, Pango, Gdk
+from gi.repository import Gtk, GObject, Pango, Gdk, Gio
 
 
 class Results(Gtk.Notebook):
@@ -133,6 +133,8 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
         value = self.data[iter_.user_data][column]
         if value is None:
             return self._markup_none(value)
+        elif isinstance(value, memoryview):
+            return self._markup_blob(value)
         else:
             data = str(value)
             lines = data.splitlines()
@@ -142,8 +144,19 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
                 return GObject.markup_escape_text(data)
 
     def _markup_none(self, value):
-        return '<span color="{}">&lt;NULL&gt;</span>'.format(
+        return '<span color="{}">NULL</span>'.format(
             self._col_insensitive_str)
+
+    def _markup_blob(self, value):
+        mime, _ = Gio.content_type_guess(None, value)
+        if mime is not None:
+            txt = '{} ({})'.format(
+                Gio.content_type_get_description(mime), mime)
+        else:
+            txt = 'LOB'
+        return '<span color="{}">{}</span>'.format(
+            self._col_insensitive_str,
+            GObject.markup_escape_text(txt))
 
     def do_get_n_columns(self):
         """Returns the number of columns."""
