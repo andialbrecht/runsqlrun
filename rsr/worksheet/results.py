@@ -71,8 +71,9 @@ class DataList(Gtk.TreeView):
             col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
             col.set_fixed_width(100)
             col.set_resizable(True)
-            col.connect('clicked', lambda *a: print('clicked'))
+            col.connect('clicked', self.on_column_header_clicked)
             self.append_column(col)
+        self.set_headers_clickable(True)
         model = CustomTreeModel(query.result, self._selection)
         self.set_model(model)
         self.results.set_current_page(0)
@@ -95,6 +96,10 @@ class DataList(Gtk.TreeView):
             return True
         elif event.button == Gdk.BUTTON_PRIMARY:
             self._update_selection(event)
+
+    def on_column_header_clicked(self, column):
+        self._selection.select_column(column)
+        self.queue_draw()
 
     def _get_pathinfo_at_event(self, event):
         """Returns a 2-tuple (path, column).
@@ -373,15 +378,24 @@ class ResultSelection:
         row = path.get_indices()[0]
         self._selected_rows.add(row)
 
+    def _get_colnum(self, column):
+        for idx, col in enumerate(self.treeview.get_columns()):
+            if col == column:
+                return idx
+
     def select_cell(self, path, column, additive):
         self.set_mode(self.MODE_CELL)
         if not additive:
             self.reset_selection()
         row = path.get_indices()[0]
-        colnum = None
-        for idx, col in enumerate(self.treeview.get_columns()):
-            if col == column:
-                colnum = idx
-                break
+        colnum = self._get_colnum(column)
         if colnum is not None:
             self._selected_cells.add((row, colnum))
+
+    def select_column(self, column, additive=False):
+        self.set_mode(self.MODE_COLUMN)
+        if not additive:
+            self.reset_selection()
+        colnum = self._get_colnum(column)
+        if colnum is not None:
+            self._selected_columns.add(colnum)
