@@ -38,6 +38,7 @@ class DataList(Gtk.TreeView):
         self.set_fixed_height_mode(True)
         # Selection is handled by button-press-event
         self.get_selection().set_mode(Gtk.SelectionMode.NONE)
+        self._selection = ResultSelection(self)
         self.results = results
         # The cell menu needs to be created outside the callback for the
         # button-press-event. Otherwise it just don't show or flickers.
@@ -60,16 +61,18 @@ class DataList(Gtk.TreeView):
         col.set_fixed_width(50)
         col.set_resizable(True)
         self.append_column(col)
+        offset_bg = len(query.description) * 2
         for idx, item in enumerate(query.description):
             renderer = Gtk.CellRendererText()
             renderer.set_property('ellipsize', Pango.EllipsizeMode.END)
             col = Gtk.TreeViewColumn(
-                item[0].replace('_', '__'), renderer, markup=idx + 1)
+                item[0].replace('_', '__'), renderer, markup=idx + 1,
+                background_rgba=offset_bg + idx)
             col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
             col.set_fixed_width(100)
             col.set_resizable(True)
             self.append_column(col)
-        model = CustomTreeModel(query.result)
+        model = CustomTreeModel(query.result, self._selection)
         self.set_model(model)
         self.results.set_current_page(0)
 
@@ -79,18 +82,29 @@ class DataList(Gtk.TreeView):
         self.set_model(None)
         for column in self.get_columns():
             self.remove_column(column)
+        self._selection.reset_selection()
 
     def on_button_pressed(self, treeview, event):
         if event.button == Gdk.BUTTON_SECONDARY:
-            pthinfo = treeview.get_path_at_pos(event.x, event.y)
-            if pthinfo is None:
-                return
-            path, column, cellx, celly = pthinfo
+            path, column = self._get_pathinfo_at_event(event)
             if column == self.get_columns()[0]:
                 return
             popup = self.get_cell_popup(path, column)
             popup.popup(None, None, None, None, event.button, event.time)
             return True
+        elif event.button == Gdk.BUTTON_PRIMARY:
+            self._update_selection(event)
+
+    def _get_pathinfo_at_event(self, event):
+        """Returns a 2-tuple (path, column).
+
+        Both values can be None.
+        """
+        pthinfo = self.get_path_at_pos(event.x, event.y)
+        if pthinfo is None:
+            return None, None
+        path, column, cellx, celly = pthinfo
+        return path, column
 
     def get_cell_popup(self, path, column):
         model = self.get_model()
@@ -104,6 +118,15 @@ class DataList(Gtk.TreeView):
         self.cell_menu.append(item)
         return self.cell_menu
 
+    def _update_selection(self, event):
+        additive = event.state == Gdk.ModifierType.CONTROL_MASK
+        path, column = self._get_pathinfo_at_event(event)
+        if column == self.get_columns()[0]:
+            self._selection.select_row(path, additive)
+        else:
+            self._selection.select_cell(path, column, additive)
+        self.queue_draw()
+
     def copy_value_to_clipboard(self, value):
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         clipboard.set_text(str(value), -1)
@@ -111,8 +134,9 @@ class DataList(Gtk.TreeView):
 
 class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
 
-    def __init__(self, data):
+    def __init__(self, data, selection):
         self.data = data
+        self.result_selection = selection
         self._num_rows = len(self.data)
         if self.data:
             self._n_columns = len(self.data[0])
@@ -122,6 +146,10 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
         context = lbl.get_style_context()
         col = context.get_color(Gtk.StateFlags.INSENSITIVE)
         self._col_insensitive_str = col.to_color().to_string()
+        self._col_bg_selected = context.get_background_color(
+            Gtk.StateFlags.SELECTED)
+        self._col_bg_normal = context.get_background_color(
+            Gtk.StateFlags.NORMAL)
         GObject.GObject.__init__(self)
 
     def do_get_iter(self, path):
@@ -178,6 +206,11 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
         """Returns the value for iter and column."""
         if column == 0:
             return self._markup_rownum(iter_.user_data + 1)
+        if column >= self._n_columns + 1:
+            if self.result_selection.is_selected(iter_.user_data, column):
+                return self._col_bg_selected
+            else:
+                return self._col_bg_normal
         value = self.data[iter_.user_data][column - 1]
         if value is None:
             return self._markup_none(value)
@@ -288,3 +321,65 @@ class QueryLog(Gtk.TreeView):
             markup += '\n<small>Running for %.3f seconds</small>' % (
                 time.time() - query.start_time)
         return markup
+
+
+class ResultSelection:
+    """Custom selection implementation.
+
+    This selection supports three modes:
+    - row selection
+    - column selection
+    - cell selection
+    Those modes are mutual exclusive.
+    """
+
+    MODE_ROW = 1
+    MODE_COLUMN = 2
+    MODE_CELL = 3
+
+    def __init__(self, treeview):
+        self.treeview = treeview
+        self.mode = None
+        self._selected_rows = set()
+        self._selected_columns = set()
+        self._selected_cells = set()
+
+    def set_mode(self, mode):
+        if mode != self.mode:
+            self.reset_selection()
+            self.mode = mode
+
+    def reset_selection(self):
+        self._selected_rows = set()
+        self._selected_columns = set()
+        self._selected_cells = set()
+
+    def is_selected(self, row, colnum):
+        if self.mode == self.MODE_ROW:
+            return row in self._selected_rows
+        elif self.mode == self.MODE_COLUMN:
+            return colnum in self._selected_columns
+        elif self.mode == self.MODE_CELL:
+            return (row, colnum) in self._selected_cells
+        else:
+            return False
+
+    def select_row(self, path, additive):
+        self.set_mode(self.MODE_ROW)
+        if not additive:
+            self.reset_selection()
+        row = path.get_indices()[0]
+        self._selected_rows.add(row)
+
+    def select_cell(self, path, column, additive):
+        self.set_mode(self.MODE_CELL)
+        if not additive:
+            self.reset_selection()
+        row = path.get_indices()[0]
+        colnum = None
+        for idx, col in enumerate(self.treeview.get_columns()):
+            if col == column:
+                colnum = idx
+                break
+        if colnum is not None:
+            self._selected_cells.add((row, colnum))
