@@ -71,6 +71,7 @@ class DataList(Gtk.TreeView):
             col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
             col.set_fixed_width(100)
             col.set_resizable(True)
+            col.connect('clicked', lambda *a: print('clicked'))
             self.append_column(col)
         model = CustomTreeModel(query.result, self._selection)
         self.set_model(model)
@@ -207,7 +208,8 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
         if column == 0:
             return self._markup_rownum(iter_.user_data + 1)
         if column >= self._n_columns + 1:
-            if self.result_selection.is_selected(iter_.user_data, column):
+            value_col = column - (self._n_columns * 2) + 1
+            if self.result_selection.is_selected(iter_.user_data, value_col):
                 return self._col_bg_selected
             else:
                 return self._col_bg_normal
