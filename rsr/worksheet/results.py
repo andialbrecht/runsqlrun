@@ -36,7 +36,13 @@ class DataList(Gtk.TreeView):
         self.set_reorderable(False)
         self.set_enable_search(False)
         self.set_fixed_height_mode(True)
+        # Selection is handled by button-press-event
+        self.get_selection().set_mode(Gtk.SelectionMode.NONE)
         self.results = results
+        # The cell menu needs to be created outside the callback for the
+        # button-press-event. Otherwise it just don't show or flickers.
+        self.cell_menu = Gtk.Menu()
+        self.connect('button-press-event', self.on_button_pressed)
 
     def set_query(self, query):
         self.clear_results()
@@ -73,6 +79,34 @@ class DataList(Gtk.TreeView):
         self.set_model(None)
         for column in self.get_columns():
             self.remove_column(column)
+
+    def on_button_pressed(self, treeview, event):
+        if event.button == Gdk.BUTTON_SECONDARY:
+            pthinfo = treeview.get_path_at_pos(event.x, event.y)
+            if pthinfo is None:
+                return
+            path, column, cellx, celly = pthinfo
+            if column == self.get_columns()[0]:
+                return
+            popup = self.get_cell_popup(path, column)
+            popup.popup(None, None, None, None, event.button, event.time)
+            return True
+
+    def get_cell_popup(self, path, column):
+        model = self.get_model()
+        iter_ = model.get_iter(path)
+        value = model.get_raw_value(iter_, self.get_columns().index(column))
+        self.cell_menu.forall(self.cell_menu.remove)
+        item = Gtk.MenuItem('Copy to clipboard')
+        item.connect('activate',
+                     lambda *a: self.copy_value_to_clipboard(value))
+        item.show()
+        self.cell_menu.append(item)
+        return self.cell_menu
+
+    def copy_value_to_clipboard(self, value):
+        clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        clipboard.set_text(str(value), -1)
 
 
 class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
@@ -136,6 +170,9 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
             return path
         else:
             return None
+
+    def get_raw_value(self, iter_, column):
+        return self.data[iter_.user_data][column - 1]
 
     def do_get_value(self, iter_, column):
         """Returns the value for iter and column."""
