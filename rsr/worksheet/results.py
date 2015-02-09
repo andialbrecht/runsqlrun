@@ -373,10 +373,13 @@ class ResultSelection:
 
     def select_row(self, path, additive):
         self.set_mode(self.MODE_ROW)
-        if not additive:
-            self.reset_selection()
         row = path.get_indices()[0]
-        self._selected_rows.add(row)
+        if row in self._selected_rows:
+            self._selected_rows.remove(row)
+        else:
+            if not additive:
+                self.reset_selection()
+            self._selected_rows.add(row)
 
     def _get_colnum(self, column):
         for idx, col in enumerate(self.treeview.get_columns()):
@@ -385,17 +388,24 @@ class ResultSelection:
 
     def select_cell(self, path, column, additive):
         self.set_mode(self.MODE_CELL)
-        if not additive:
-            self.reset_selection()
         row = path.get_indices()[0]
         colnum = self._get_colnum(column)
-        if colnum is not None:
-            self._selected_cells.add((row, colnum))
+        if colnum is None:
+            return
+        entry = (row, colnum)
+        if entry in self._selected_cells:
+            self._selected_cells.remove(entry)
+        else:
+            if not additive:
+                self.reset_selection()
+            self._selected_cells.add(entry)
 
-    def select_column(self, column, additive=False):
+    def select_column(self, column):
         self.set_mode(self.MODE_COLUMN)
-        if not additive:
-            self.reset_selection()
         colnum = self._get_colnum(column)
-        if colnum is not None:
+        if colnum is None:
+            return
+        if colnum in self._selected_columns:
+            self._selected_columns.remove(colnum)
+        else:
             self._selected_columns.add(colnum)
