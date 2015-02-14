@@ -19,7 +19,7 @@ on other distributions:
 In addition you'll need to install a database driver for
 each database management system you'd like to connect to:
 
-- PostgreSQL: python3-pscopg2
+- PostgreSQL: python3-psycopg2
 - MariaDB/MySQL: python3-mysql.connector
 - Oracle: cx_Oracle
 
