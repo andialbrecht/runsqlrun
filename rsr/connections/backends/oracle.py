@@ -51,11 +51,15 @@ select table_name
 from user_tables;
 """
 
+# Join user_tables since user_tab_columns also contains columns
+# for views. This could be removed when SQL_TABLES also selects
+# views.
 SQL_COLUMNS = """
-select table_name,
-       column_name,
-       column_id
-from user_tab_columns;
+SELECT c.table_name,
+       c.column_name,
+       c.column_id
+FROM user_tab_columns c
+JOIN user_tables t ON t.table_name = c.table_name;
 """
 
 SQL_FK_CONSTRAINTS = """

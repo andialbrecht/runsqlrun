@@ -3,6 +3,9 @@ Development Version
 
 * Improve data rendering in result list.
 
+Bugs fixed
+* Oracle: schema refresh could lead to KeyError when fetching columns (#1).
+
 
 Version 0.3.0 (2015-02-06)
 ==========================
