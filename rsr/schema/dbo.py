@@ -12,12 +12,10 @@ class DbObject:
         return self.type_label
 
 
-class Table(DbObject):
-    type_key = 'table'
-    type_name = 'Table'
+class DBObjectColumns(DbObject):
 
     def __init__(self, *args, **kwargs):
-        super(Table, self).__init__(*args, **kwargs)
+        super(DBObjectColumns, self).__init__(*args, **kwargs)
         self._columns = {}
 
     @property
@@ -28,6 +26,20 @@ class Table(DbObject):
 
     def add_column(self, col):
         self._columns[col.uid] = col
+
+
+class Table(DBObjectColumns):
+    type_key = 'table'
+    type_name = 'Table'
+
+
+class View(DBObjectColumns):
+    type_key = 'view'
+    type_name = 'View'
+
+    def __init__(self, *args, **kwargs):
+        self.statement = kwargs.pop('statement', None)
+        super(View, self).__init__(*args, **kwargs)
 
 
 class Column(DbObject):

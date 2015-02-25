@@ -12,10 +12,14 @@ class PsqlSchema(BaseSchemaProvider):
 
     def refresh(self, schema):
         tables = {}
-        for table in self.driver.execute_raw(SQL_TABLES):
-            t = dbo.Table(table[0], table[1], table[2])
+        for item in self.driver.execute_raw(SQL_TABLES):
+            if item[3] == 'r':
+                klass = dbo.Table
+            else:
+                klass = dbo.View
+            t = klass(item[0], item[1], item[2])
             schema.add_object(t)
-            tables[table[0]] = t
+            tables[item[0]] = t
         for col in self.driver.execute_raw(SQL_COLUMNS):
             table = tables[col[0]]
             col = dbo.Column(col[1], col[2], description=col[3], order=col[4])
@@ -46,12 +50,13 @@ class Driver(BaseDriver):
 SQL_TABLES = """
 select c.oid,
        c.relname,
-       d.description
+       d.description,
+       c.relkind
 from pg_catalog.pg_class c
 join pg_catalog.pg_namespace n on n.oid = c.relnamespace
 left join pg_catalog.pg_description d on d.objoid = c.oid
 and d.objsubid = 0
-where c.relkind = 'r'
+where c.relkind in ('r', 'v')
   and n.nspname = 'public';
 """
 
@@ -67,7 +72,7 @@ JOIN pg_catalog.pg_class c on c.oid = a.attrelid
 join pg_catalog.pg_namespace n on n.oid = c.relnamespace
 left join pg_catalog.pg_description d on d.objoid = c.oid
 and d.objsubid = a.attnum
-where c.relkind = 'r'
+where c.relkind in ('r', 'v')
   and n.nspname = 'public'
   and a.attnum >= 0;
 """

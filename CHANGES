@@ -2,6 +2,7 @@ Development Version
 ===================
 
 * Improve data rendering in result list.
+* Autocompletion now includes views and their columns.
 
 Bugs fixed
 * Oracle: schema refresh could lead to KeyError when fetching columns (#1).

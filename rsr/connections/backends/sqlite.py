@@ -12,7 +12,11 @@ class SQLiteSchema(BaseSchemaProvider):
 
     def refresh(self, schema):
         for table in self.driver.execute_raw(SQL_TABLES):
-            t = dbo.Table(table[0], table[0])
+            if table[1] == 'table':
+                klass = dbo.Table
+            else:
+                klass = dbo.View
+            t = klass(table[0], table[0])
             schema.add_object(t)
             for col in self.driver.execute_raw(('pragma table_info'
                                                 '(\'{}\')').format(table[0])):
@@ -32,9 +36,9 @@ class Driver(BaseDriver):
 
 
 SQL_TABLES = """
-SELECT name
+SELECT name, type
 FROM sqlite_master
-WHERE TYPE= 'table';
+WHERE TYPE in ('table', 'view');
 """
 
 

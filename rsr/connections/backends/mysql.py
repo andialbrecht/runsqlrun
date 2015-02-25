@@ -13,9 +13,13 @@ class MySqlSchema(BaseSchemaProvider):
     def refresh(self, schema):
         tables = {}
         sql = SQL_TABLES % {'schema': self.driver.config['db']}
-        for table in self.driver.execute_raw(sql):
-            uid = '{}.{}'.format(table[0], table[1])
-            t = dbo.Table(uid, table[1], table[2])
+        for item in self.driver.execute_raw(sql):
+            uid = '{}.{}'.format(item[0], item[1])
+            if item[3] == 't':
+                klass = dbo.Table
+            else:
+                klass = dbo.View
+            t = klass(uid, item[1], item[2])
             schema.add_object(t)
             tables[uid] = t
         sql = SQL_COLUMNS % {'schema': self.driver.config['db']}
@@ -46,8 +50,16 @@ class Driver(BaseDriver):
 SQL_TABLES = """
 SELECT table_schema,
        table_name,
-       table_comment
+       table_comment,
+       't'
 FROM information_schema.tables
+WHERE table_schema = '%(schema)s'
+UNION
+SELECT table_schema,
+       table_name,
+       null,
+       'v'
+FROM information_schema.views
 WHERE table_schema = '%(schema)s'
 """
 

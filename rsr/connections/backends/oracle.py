@@ -12,8 +12,12 @@ class OracleSchema(BaseSchemaProvider):
 
     def refresh(self, schema):
         tables = {}
-        for table in self.driver.execute_raw(SQL_TABLES).fetchall():
-            t = dbo.Table(table[0], table[0])
+        for item in self.driver.execute_raw(SQL_TABLES).fetchall():
+            if item[1] == 't':
+                klass = dbo.Table
+            else:
+                klass = dbo.View
+            t = klass(item[0], item[0])
             schema.add_object(t)
             tables[t.uid] = t
         for col in self.driver.execute_raw(SQL_COLUMNS):
@@ -47,19 +51,18 @@ class Driver(BaseDriver):
 
 
 SQL_TABLES = """
-select table_name
-from user_tables;
+select table_name, 't' as type
+from user_tables
+union
+select view_name, 'v' as type
+from user_views;
 """
 
-# Join user_tables since user_tab_columns also contains columns
-# for views. This could be removed when SQL_TABLES also selects
-# views.
 SQL_COLUMNS = """
-SELECT c.table_name,
-       c.column_name,
-       c.column_id
-FROM user_tab_columns c
-JOIN user_tables t ON t.table_name = c.table_name;
+SELECT table_name,
+       column_name,
+       column_id
+FROM user_tab_columns;
 """
 
 SQL_FK_CONSTRAINTS = """
