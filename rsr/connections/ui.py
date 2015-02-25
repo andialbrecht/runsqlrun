@@ -190,6 +190,7 @@ class ConnectionDialog(Gtk.Dialog):
         self.builder.get_object('cmd_ssh').get_buffer().set_text(
             config.get('cmd_ssh', ''))
         self._edit_key = key
+        self.builder.get_object('lbl_test_result').set_text('')
 
     def on_delete_connection(self, *args):
         conn = self.get_connection()
