@@ -19,7 +19,7 @@ class Worksheet(Gtk.VPaned):
         self.app = win.app
         self.connection = None
         self.editor = Editor(self)
-        self.results = Results()
+        self.results = Results(self)
 
         sw = Gtk.ScrolledWindow()
         sw.add(self.editor)

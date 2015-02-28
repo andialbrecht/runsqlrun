@@ -1,3 +1,5 @@
+import mimetypes
+import tempfile
 import time
 
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio
@@ -5,8 +7,9 @@ from gi.repository import Gtk, GObject, Pango, Gdk, Gio
 
 class Results(Gtk.Notebook):
 
-    def __init__(self):
+    def __init__(self, worksheet):
         super(Results, self).__init__()
+        self.win = worksheet.win
         self._active_query = None
 
         self.data = DataList(self)
@@ -40,6 +43,7 @@ class DataList(Gtk.TreeView):
         self.get_selection().set_mode(Gtk.SelectionMode.NONE)
         self._selection = ResultSelection(self)
         self.results = results
+        self.win = results.win
         # The cell menu needs to be created outside the callback for the
         # button-press-event. Otherwise it just don't show or flickers.
         self.cell_menu = Gtk.Menu()
@@ -117,11 +121,21 @@ class DataList(Gtk.TreeView):
         iter_ = model.get_iter(path)
         value = model.get_raw_value(iter_, self.get_columns().index(column))
         self.cell_menu.forall(self.cell_menu.remove)
-        item = Gtk.MenuItem('Copy to clipboard')
-        item.connect('activate',
-                     lambda *a: self.copy_value_to_clipboard(value))
-        item.show()
-        self.cell_menu.append(item)
+        if model.is_blob_value(value):
+            content_type = Gio.content_type_guess(None, value)[0]
+            if Gio.app_info_get_all_for_type(content_type):
+                item = Gtk.MenuItem('View contents')
+                item.connect(
+                    'activate',
+                    lambda *a: self.view_blob_contents(value, content_type))
+                item.show()
+                self.cell_menu.append(item)
+        else:
+            item = Gtk.MenuItem('Copy to clipboard')
+            item.connect('activate',
+                         lambda *a: self.copy_value_to_clipboard(value))
+            item.show()
+            self.cell_menu.append(item)
         return self.cell_menu
 
     def _update_selection(self, event):
@@ -137,6 +151,19 @@ class DataList(Gtk.TreeView):
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         clipboard.set_text(str(value), -1)
 
+    def view_blob_contents(self, value, content_type):
+        dlg = Gtk.AppChooserDialog.new_for_content_type(
+            self.win, Gtk.DialogFlags.DESTROY_WITH_PARENT | Gtk.DialogFlags.MODAL,
+            content_type)
+        if dlg.run() == Gtk.ResponseType.OK:
+            app_info = dlg.get_app_info()
+            if app_info is not None:
+                fd, name = tempfile.mkstemp(
+                    mimetypes.guess_extension(content_type) or '.blob')
+                with open(name, 'wb') as f:
+                    f.write(value)
+                app_info.launch_uris(['file://%s' % name])
+        dlg.destroy()
 
 class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
 
@@ -208,6 +235,9 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
     def get_raw_value(self, iter_, column):
         return self.data[iter_.user_data][column - 1]
 
+    def is_blob_value(self, value):
+        return isinstance(value, memoryview)
+
     def do_get_value(self, iter_, column):
         """Returns the value for iter and column."""
         if column == 0:
@@ -221,7 +251,7 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
         value = self.data[iter_.user_data][column - 1]
         if value is None:
             return self._markup_none(value)
-        elif isinstance(value, memoryview):
+        elif self.is_blob_value(value):
             return self._markup_blob(value)
         else:
             data = str(value)
