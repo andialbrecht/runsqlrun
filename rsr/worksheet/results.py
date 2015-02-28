@@ -130,6 +130,12 @@ class DataList(Gtk.TreeView):
                     lambda *a: self.view_blob_contents(value, content_type))
                 item.show()
                 self.cell_menu.append(item)
+            item = Gtk.MenuItem('Save contents')
+            item.connect(
+                'activate',
+                lambda *a: self.save_blob_contents(value, content_type))
+            item.show()
+            self.cell_menu.append(item)
         else:
             item = Gtk.MenuItem('Copy to clipboard')
             item.connect('activate',
@@ -163,6 +169,16 @@ class DataList(Gtk.TreeView):
                 with open(name, 'wb') as f:
                     f.write(value)
                 app_info.launch_uris(['file://%s' % name])
+        dlg.destroy()
+
+    def save_blob_contents(self, value, content_type):
+        dlg = Gtk.FileChooserDialog(
+            'Save Contents', self.win, Gtk.FileChooserAction.SAVE,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+        if dlg.run() == Gtk.ResponseType.ACCEPT:
+            with open(dlg.get_filename(), 'wb') as f:
+                f.write(value)
         dlg.destroy()
 
 class CustomTreeModel(GObject.GObject, Gtk.TreeModel):

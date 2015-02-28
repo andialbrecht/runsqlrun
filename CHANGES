@@ -3,7 +3,7 @@ Development Version
 
 * Improve data rendering in result list.
 * Autocompletion now includes views and their columns.
-* View contents of blob files.
+* View and save blob file contents.
 
 Bugs fixed
 * Oracle: schema refresh could lead to KeyError when fetching columns (#1).
