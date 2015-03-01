@@ -1,6 +1,8 @@
+import csv
 import mimetypes
 import tempfile
 import time
+from collections import defaultdict
 from enum import Enum
 
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio
@@ -130,8 +132,9 @@ class DataList(Gtk.TreeView):
             ResultSelection.Type.Nothing, ResultSelection.Type.Single):
             self._add_items_for_single_cell(model, value)
         elif seltype in (ResultSelection.Type.Columns,
-                         ResultSelection.Type.Rows):
-            self._add_items_for_multiple_cells(model, value)
+                         ResultSelection.Type.Rows,
+                         ResultSelection.Type.Multiple):
+            self._add_items_for_row_cols(model, value)
         return self.cell_menu
 
     def _add_items_for_single_cell(self, model, value):
@@ -157,8 +160,11 @@ class DataList(Gtk.TreeView):
             item.show()
             self.cell_menu.append(item)
 
-    def _add_items_for_multiple_cells(self, model, value):
-        pass
+    def _add_items_for_row_cols(self, model, value):
+        item = Gtk.MenuItem('Export selection')
+        item.show()
+        item.connect('activate', lambda *a: self.export_selected())
+        self.cell_menu.append(item)
 
     def _update_selection(self, event):
         additive = event.state == Gdk.ModifierType.CONTROL_MASK
@@ -196,6 +202,31 @@ class DataList(Gtk.TreeView):
             with open(dlg.get_filename(), 'wb') as f:
                 f.write(value)
         dlg.destroy()
+
+    def export_selected(self):
+        def to_csv(value):
+            if value is None:
+                return ''
+            elif isinstance(value, memoryview):
+                return ''
+            return str(value)
+
+        dlg = Gtk.FileChooserDialog(
+            'Export Selection', self.win, Gtk.FileChooserAction.SAVE,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+        file_filter = Gtk.FileFilter()
+        file_filter.set_name('CSV files')
+        file_filter.add_mime_type('text/csv')
+        dlg.add_filter(file_filter)
+        dlg.set_current_name('export.csv')
+        if dlg.run() == Gtk.ResponseType.ACCEPT:
+            with open(dlg.get_filename(), 'w') as f:
+                writer = csv.writer(f)
+                for row in self._selection.get_export_data():
+                    writer.writerow(list(map(to_csv, row)))
+        dlg.destroy()
+
 
 class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
 
@@ -490,3 +521,58 @@ class ResultSelection:
             return ResultSelection.Type.Multiple
         else:
             return ResultSelection.Type.Nothing
+
+    def get_export_data(self):
+        data = []
+        model = self.treeview.get_model()
+        if self.mode == ResultSelection.MODE_CELL:
+            row = []
+            last_row = None
+            selected = list(self._selected_cells)
+            selected.sort()
+            unique_cols = set()
+            selected_rows = defaultdict(list)
+            for entry in selected:
+                selected_rows[entry[0]].append(entry)
+                unique_cols.add(entry[1])
+            rows = list(selected_rows)
+            rows.sort()
+            unique_cols = list(unique_cols)
+            unique_cols.sort()
+            headers = []
+            for colnum in unique_cols:
+                column = self.treeview.get_column(colnum)
+                headers.append(column.get_title().replace('__', '_'))
+            data.append(headers)
+            for rownum in rows:
+                row = []
+                for colnum in unique_cols:
+                    if (rownum, colnum) in selected:
+                        row.append(model.data[rownum][colnum - 1])
+                    else:
+                        row.append(None)
+                if row:
+                    data.append(row)
+        elif self.mode == ResultSelection.MODE_COLUMN:
+            selected_cols = list(self._selected_columns)
+            selected_cols.sort()
+            headers = []
+            for colnum in selected_cols:
+                column = self.treeview.get_column(colnum)
+                headers.append(column.get_title().replace('__', '_'))
+            data.append(headers)
+            for item in model.data:
+                row = []
+                for colnum in selected_cols:
+                    row.append(item[colnum - 1])
+                if row:
+                    data.append(row)
+        elif self.mode == ResultSelection.MODE_ROW:
+            headers = []
+            for i in range(len(model.data[0])):
+                column = self.treeview.get_column(i + 1)
+                headers.append(column.get_title().replace('__', '_'))
+            data.append(headers)
+            for rownum in self._selected_rows:
+                data.append(model.data[rownum])
+        return data
