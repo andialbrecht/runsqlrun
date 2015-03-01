@@ -1,6 +1,7 @@
 import mimetypes
 import tempfile
 import time
+from enum import Enum
 
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio
 
@@ -93,9 +94,11 @@ class DataList(Gtk.TreeView):
     def on_button_pressed(self, treeview, event):
         if event.button == Gdk.BUTTON_SECONDARY:
             path, column = self._get_pathinfo_at_event(event)
-            if column == self.get_columns()[0]:
+            if column == self.get_columns()[0] or path is None:
                 return
             popup = self.get_cell_popup(path, column)
+            if not popup.get_children():
+                return
             popup.popup(None, None, None, None, event.button, event.time)
             return True
         elif event.button == Gdk.BUTTON_PRIMARY:
@@ -117,10 +120,21 @@ class DataList(Gtk.TreeView):
         return path, column
 
     def get_cell_popup(self, path, column):
+        assert path is not None
         model = self.get_model()
         iter_ = model.get_iter(path)
         value = model.get_raw_value(iter_, self.get_columns().index(column))
         self.cell_menu.forall(self.cell_menu.remove)
+        seltype = self._selection.get_active_selection_type()
+        if seltype in (
+            ResultSelection.Type.Nothing, ResultSelection.Type.Single):
+            self._add_items_for_single_cell(model, value)
+        elif seltype in (ResultSelection.Type.Columns,
+                         ResultSelection.Type.Rows):
+            self._add_items_for_multiple_cells(model, value)
+        return self.cell_menu
+
+    def _add_items_for_single_cell(self, model, value):
         if model.is_blob_value(value):
             content_type = Gio.content_type_guess(None, value)[0]
             if Gio.app_info_get_all_for_type(content_type):
@@ -137,12 +151,14 @@ class DataList(Gtk.TreeView):
             item.show()
             self.cell_menu.append(item)
         else:
-            item = Gtk.MenuItem('Copy to clipboard')
+            item = Gtk.MenuItem('Copy value to clipboard')
             item.connect('activate',
                          lambda *a: self.copy_value_to_clipboard(value))
             item.show()
             self.cell_menu.append(item)
-        return self.cell_menu
+
+    def _add_items_for_multiple_cells(self, model, value):
+        pass
 
     def _update_selection(self, event):
         additive = event.state == Gdk.ModifierType.CONTROL_MASK
@@ -390,6 +406,13 @@ class ResultSelection:
     MODE_COLUMN = 2
     MODE_CELL = 3
 
+    class Type(Enum):
+        Nothing = 1  # "None" looks strange here :)
+        Single = 2
+        Multiple = 3
+        Rows = 4
+        Columns = 5
+
     def __init__(self, treeview):
         self.treeview = treeview
         self.mode = None
@@ -455,3 +478,15 @@ class ResultSelection:
             self._selected_columns.remove(colnum)
         else:
             self._selected_columns.add(colnum)
+
+    def get_active_selection_type(self):
+        if self._selected_columns:
+            return ResultSelection.Type.Columns
+        elif self._selected_rows:
+            return ResultSelection.Type.Rows
+        elif len(self._selected_cells) == 1:
+            return ResultSelection.Type.Single
+        elif self._selected_cells:
+            return ResultSelection.Type.Multiple
+        else:
+            return ResultSelection.Type.Nothing
