@@ -319,7 +319,11 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
         else:
             data = str(value)
             lines = data.splitlines()
-            if lines:
+            if len(lines) > 1:
+                return '{} <span color="{}">[...]</span>'.format(
+                    GObject.markup_escape_text(lines[0]),
+                    self._col_insensitive_str)
+            elif lines:
                 return GObject.markup_escape_text(lines[0])
             else:
                 return GObject.markup_escape_text(data)
