@@ -1,5 +1,5 @@
-Development Version
-===================
+Version 0.4.0 (2015-03-02)
+==========================
 
 * Improve data rendering in result list.
 * Autocompletion now includes views and their columns.
