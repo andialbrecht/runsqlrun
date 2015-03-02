@@ -5,6 +5,7 @@ Development Version
 * Autocompletion now includes views and their columns.
 * View and save blob file contents.
 * Export selection from results to CSV.
+* View full multi-line contents in popup window.
 
 Bugs fixed
 * Oracle: schema refresh could lead to KeyError when fetching columns (#1).

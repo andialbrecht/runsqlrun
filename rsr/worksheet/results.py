@@ -159,6 +159,11 @@ class DataList(Gtk.TreeView):
                          lambda *a: self.copy_value_to_clipboard(value))
             item.show()
             self.cell_menu.append(item)
+            item = Gtk.MenuItem('View value')
+            item.connect('activate',
+                         lambda *a: self.view_value(value))
+            item.show()
+            self.cell_menu.append(item)
 
     def _add_items_for_row_cols(self, model, value):
         item = Gtk.MenuItem('Export selection')
@@ -178,6 +183,11 @@ class DataList(Gtk.TreeView):
     def copy_value_to_clipboard(self, value):
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         clipboard.set_text(str(value), -1)
+
+    def view_value(self, value):
+        dlg = DataViewer(self.win, value)
+        dlg.run()
+        dlg.destroy()
 
     def view_blob_contents(self, value, content_type):
         dlg = Gtk.AppChooserDialog.new_for_content_type(
@@ -580,3 +590,30 @@ class ResultSelection:
             for rownum in self._selected_rows:
                 data.append(model.data[rownum])
         return data
+
+
+class DataViewer(Gtk.Dialog):
+    """Dialog to display a value"""
+
+    def __init__(self, parent, data):
+        """
+        The constructor of this class takes 1 argument:
+
+        :Parameter:
+            data
+                A Python value to display
+        """
+        Gtk.Dialog.__init__(self, 'Cell Content', parent,
+                            Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                            (Gtk.STOCK_CLOSE, Gtk.ResponseType.OK))
+        sw = Gtk.ScrolledWindow()
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        self.vbox.pack_start(sw, True, True, True)
+        tv = Gtk.TextView()
+        tv.set_editable(False)
+        tv.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        tv.get_buffer().set_text(str(data))
+        sw.add(tv)
+        sw.show_all()
+        self.resize(650, 550)
