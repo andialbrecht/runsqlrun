@@ -5,4 +5,3 @@ class BaseSchemaProvider:
 
     def refresh(self, schema):
         raise NotImplementedError
-

@@ -128,8 +128,8 @@ class DataList(Gtk.TreeView):
         value = model.get_raw_value(iter_, self.get_columns().index(column))
         self.cell_menu.forall(self.cell_menu.remove)
         seltype = self._selection.get_active_selection_type()
-        if seltype in (
-            ResultSelection.Type.Nothing, ResultSelection.Type.Single):
+        if seltype in (ResultSelection.Type.Nothing,
+                       ResultSelection.Type.Single):
             self._add_items_for_single_cell(model, value)
         elif seltype in (ResultSelection.Type.Columns,
                          ResultSelection.Type.Rows,
@@ -191,7 +191,8 @@ class DataList(Gtk.TreeView):
 
     def view_blob_contents(self, value, content_type):
         dlg = Gtk.AppChooserDialog.new_for_content_type(
-            self.win, Gtk.DialogFlags.DESTROY_WITH_PARENT | Gtk.DialogFlags.MODAL,
+            self.win,
+            Gtk.DialogFlags.DESTROY_WITH_PARENT | Gtk.DialogFlags.MODAL,
             content_type)
         if dlg.run() == Gtk.ResponseType.OK:
             app_info = dlg.get_app_info()
@@ -541,7 +542,6 @@ class ResultSelection:
         model = self.treeview.get_model()
         if self.mode == ResultSelection.MODE_CELL:
             row = []
-            last_row = None
             selected = list(self._selected_cells)
             selected.sort()
             unique_cols = set()
