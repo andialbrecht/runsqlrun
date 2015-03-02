@@ -17,6 +17,7 @@ class Query(GObject.GObject):
         self.error = None
         self.result = None
         self.description = None
+        self.rowcount = None
         self.start_time = None
         self.execution_duration = None
 
@@ -24,8 +25,9 @@ class Query(GObject.GObject):
         """Returns a single line string describing the result."""
         if not self.finished:
             return None
-        if self.result:
+        if self.result is not None:
             return '%i rows, %.3f seconds' % (len(self.result),
                                               self.execution_duration)
         else:
-            return ''
+            return '%i rows affected, %.3f seconds' % (self.rowcount,
+                                                       self.execution_duration)

@@ -33,8 +33,12 @@ class BaseDriver:
     def execute(self, query):
         cur = self._conn.cursor()
         cur.execute(self.prepare_sql(query.sql))
-        query.description = cur.description
-        query.result = cur.fetchall()
+        if cur.description:
+            query.description = cur.description
+            query.result = cur.fetchall()
+        else:
+            query.rowcount = cur.rowcount
+            query.description = query.result = None
         cur.close()
 
     def execute_raw(self, sql):

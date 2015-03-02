@@ -57,7 +57,7 @@ class DataList(Gtk.TreeView):
         query.connect('finished', self.on_query_finished)
 
     def on_query_finished(self, query):
-        if query.failed:
+        if query.failed or query.result is None:
             return
         renderer = Gtk.CellRendererText()
         renderer.set_alignment(1, .5)
