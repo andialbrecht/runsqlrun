@@ -310,6 +310,7 @@ class ConnectionIndicator(Gtk.Box):
     def on_connection_changed(self, editor):
         if editor is None or not editor.connection:
             self.lbl_conn.set_text('[Not connected]')
+            self.win.headerbar.set_title('RunSQLRun')
             self.win.headerbar.set_subtitle('Database Query Tool')
         else:
             lbl = editor.connection.get_label()
@@ -320,11 +321,9 @@ class ConnectionIndicator(Gtk.Box):
                 lbl += ' - Not connected'
             self.lbl_conn.set_state(state)
             self.lbl_conn.set_text(lbl)
-            subtitle = editor.connection.get_label()
-            if editor.connection.config.get('description'):
-                subtitle += ' · {}'.format(
-                    editor.connection.config['description'])
-            self.win.headerbar.set_subtitle(subtitle)
+            self.win.headerbar.set_title(editor.connection.get_label())
+            self.win.headerbar.set_subtitle(
+                editor.connection.config.get('description', 'RunSQLRun'))
             editor.connection.connect(
                 'state-changed', lambda *a: self.on_connection_changed(editor))
 
