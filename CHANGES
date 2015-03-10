@@ -8,6 +8,7 @@ Version 0.4.0 (2015-03-02)
 * View full multi-line contents in popup window.
 
 Bugs fixed
+
 * Oracle: schema refresh could lead to KeyError when fetching columns (#1).
 
 
