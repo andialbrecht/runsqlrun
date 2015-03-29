@@ -2,6 +2,7 @@
 
 RunSQLRun is a database query tool.
 
+![Screenshot of RunSQLRun](http://runsqlrun.org/static/runsqlrun_query.png)
 
 ## Requirements
 
