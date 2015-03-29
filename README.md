@@ -1,11 +1,9 @@
-RunSQLRun
-=========
+# RunSQLRun
 
 RunSQLRun is a database query tool.
 
 
-Requirements
-------------
+## Requirements
 
 To run RunSQLRun you'll need the following system packages
 on Debian / Ubuntu systems. The package names may vary
@@ -23,25 +21,24 @@ each database management system you'd like to connect to:
 - MariaDB/MySQL: python3-mysql.connector
 - Oracle: cx_Oracle
 
-Run RunSQLRun
--------------
+## Run RunSQLRun
 
 To run RunSQLRun without installation change to the directory
 where this README is located and run
 
-  $ make
-  $ python3 -m rsr
+    $ make
+    $ python3 -m rsr
 
 Calling "make" is only required once or when you update a source
 checkout. It generates some files required to run the application.
 
 
-Links
------
+## Links
 
-Source: https://bitbucket.org/andialbrecht/runsqlrun/
+Source: https://github.com/andialbrecht/runsqlrun/
 
 
 Copyright (c) 2015 Andi Albrecht <albrecht.andi@gmail.com>
+
 RunSQLRun is licensed under the terms of the MIT license.
 See the file LICENSE for details.
