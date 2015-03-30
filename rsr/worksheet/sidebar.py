@@ -1,4 +1,4 @@
-from gi.repository import Gtk
+from gi.repository import Gtk, Pango
 
 
 class Sidebar(Gtk.Box):
@@ -55,7 +55,20 @@ class IntrospectionItem(SidebarItem):
         self.conn = None
         self.sig_schema = None
 
-        # UI
+        # The stack
+        stack = Gtk.Stack()
+        stack.set_transition_type(Gtk.StackTransitionType.SLIDE_RIGHT)
+
+        # Page 1: Please connect
+        lbl = Gtk.Label(
+            'No connection, no fun.\n\n'
+            'Connect to a database (F10) and see database schema here.')
+        lbl.set_valign(Gtk.Align.START)
+        lbl.set_line_wrap(True)
+        lbl.set_line_wrap_mode(Pango.WrapMode.WORD)
+        stack.add_titled(lbl, 'please', 'Please connect')
+
+        # Page 2: Object list
         box = Gtk.Box()
         box.set_orientation(Gtk.Orientation.VERTICAL)
         box.set_spacing(6)
@@ -77,14 +90,17 @@ class IntrospectionItem(SidebarItem):
         sw.add(tree)
         box.pack_start(sw, True, True, 0)
 
+        stack.add_titled(box, 'objects', 'Object list')
+
         # Set main widget
-        self.widget = box
+        self.widget = stack
 
         # Setup signals
         worksheet.connect('connection-changed', self.on_connection_changed)
         self.on_connection_changed(worksheet)
 
     def on_connection_changed(self, worksheet):
+        # Update signal handlers and internal state if needed
         if worksheet.connection != self.conn:
             self.store.clear()
             if self.sig_schema is not None:
@@ -94,6 +110,14 @@ class IntrospectionItem(SidebarItem):
             if self.conn is not None:
                 self.conn.schema.connect('refreshed', self.on_schema_refreshed)
                 self.on_schema_refreshed(self.conn.schema)
+        else:
+            return
+
+        # Update stack view to display correct page
+        if self.conn is None:
+            self.widget.set_visible_child_name('please')
+        else:
+            self.widget.set_visible_child_name('objects')
 
     def on_schema_refreshed(self, schema):
         self.store.clear()
