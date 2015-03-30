@@ -4,6 +4,7 @@ from rsr.connections.query import Query
 from rsr.connections.ui import ConnectionDialog
 from rsr.worksheet.editor import Editor
 from rsr.worksheet.results import Results
+from rsr.worksheet.sidebar import Sidebar
 
 
 class Worksheet(Gtk.VPaned):
@@ -20,10 +21,18 @@ class Worksheet(Gtk.VPaned):
         self.connection = None
         self.editor = Editor(self)
         self.results = Results(self)
+        self.sidebar = Sidebar(self)
 
         sw = Gtk.ScrolledWindow()
         sw.add(self.editor)
-        self.add1(sw)
+
+        paned = Gtk.HPaned()
+        paned.add1(sw)
+        paned.add2(self.sidebar)
+        self._paned_sidebar = paned
+        width = self.win.get_allocation().width - 300
+        paned.set_position(width)
+        self.add1(paned)
 
         self.add2(self.results)
 
@@ -49,6 +58,7 @@ class Worksheet(Gtk.VPaned):
         return {
             'content': self.editor.get_text(),
             'split_pos': self.get_position(),
+            'sidebar_width': self._paned_sidebar.get_position(),
             'connection': conn_key,
             'cursor': self.editor.get_cursor_position(),
         }
@@ -56,6 +66,8 @@ class Worksheet(Gtk.VPaned):
     def restore_state(self, state):
         self.editor.set_text(state['content'])
         self.set_position(state.get('split_pos', 0))
+        width = self.win.get_allocation().width - 300
+        self._paned_sidebar.set_position(state.get('sidebar_width', width))
         self.set_connection(state.get('connection', None))
         self.editor.set_cursor_position(state.get('cursor', None))
 

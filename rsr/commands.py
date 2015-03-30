@@ -116,6 +116,12 @@ commands = {
                 'shortcut': '<Alt><Shift>Up',
                 'callback': 'editor.jump_prev'
             },
+            'toggle_sidebar': {
+                'label': 'Toggle sidebar',
+                'description': 'Show / hide the sidebar in this editor',
+                'shortcut': '<Alt><Shift>S',
+                'callback': 'sidebar.toggle'
+            }
         }
     }
 }
