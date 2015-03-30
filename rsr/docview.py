@@ -91,7 +91,7 @@ WELCOME_MSG = """/* Start typing your SQL here.
 
    Any feedback is highly appreciated!
 
-   Issue tracker: https://bitbucket.org/andialbrecht/runsqlrun
+   Issue tracker: https://github.com/andialbrecht/runsqlrun
 
    Have fun!
 
