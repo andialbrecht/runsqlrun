@@ -1,3 +1,12 @@
+Development Version
+===================
+
+* Shortcuts for disconnecting an editor from an connection and connecting to
+  db have changed. The sequence is now
+  F9  - assign an connection
+  F10 - connect to database
+  F11 - disconnect (and revoke assignment)
+
 Version 0.4.0 (2015-03-02)
 ==========================
 
