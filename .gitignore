@@ -1,3 +1,2 @@
-syntax: glob
 __pycache__
 data/runsqlrun.gresource
