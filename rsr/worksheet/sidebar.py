@@ -1,4 +1,4 @@
-from gi.repository import Gtk, Pango
+from gi.repository import Gtk, Pango, GObject
 
 
 class Sidebar(Gtk.Box):
@@ -55,6 +55,10 @@ class IntrospectionItem(SidebarItem):
         self.conn = None
         self.sig_schema = None
 
+        l = Gtk.Label()
+        self.col_insensitive = l.get_style_context().get_color(
+            Gtk.StateFlags.INSENSITIVE).to_color().to_string()
+
         # The stack
         stack = Gtk.Stack()
         stack.set_transition_type(Gtk.StackTransitionType.SLIDE_RIGHT)
@@ -79,12 +83,13 @@ class IntrospectionItem(SidebarItem):
         box.pack_start(entry, False, False, 0)
 
         # Object list
-        store = Gtk.ListStore(str)
-        store.set_sort_column_id(0, Gtk.SortType.ASCENDING)
+        store = Gtk.ListStore(object, str, str)
         self.store = store
+        store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
         tree = Gtk.TreeView()
+        self.object_list = tree
         tree.set_model(store)
-        col = Gtk.TreeViewColumn('Object', Gtk.CellRendererText(), markup=0)
+        col = Gtk.TreeViewColumn('Object', Gtk.CellRendererText(), markup=2)
         tree.append_column(col)
         sw = Gtk.ScrolledWindow()
         sw.add(tree)
@@ -122,7 +127,19 @@ class IntrospectionItem(SidebarItem):
     def on_schema_refreshed(self, schema):
         self.store.clear()
         for item in schema.get_objects():
-            self.store.append([item.name])
+            markup = '{}\n<span font-size="small" color="{}">{}'.format(
+                *list(map(GObject.markup_escape_text, [
+                    item.name, self.col_insensitive, item.get_type_name()]))
+            )
+            if item.description:
+                markup += ': {}'.format(
+                    GObject.markup_escape_text(item.description))
+            markup += '</span>'
+            self.store.append([item, item.name, markup])
+        iter_ = self.store.get_iter_first()
+        if iter_ is not None:
+            self.object_list.scroll_to_cell(self.store.get_path(iter_), None,
+                                            False, 0, 0)
 
     def get_widget(self):
         return self.widget

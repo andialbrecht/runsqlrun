@@ -1,7 +1,7 @@
 class DbObject:
 
     type_key = None
-    type_label = None
+    type_name = None
 
     def __init__(self, uid, name, description=None):
         self.uid = uid
@@ -9,7 +9,7 @@ class DbObject:
         self.description = description
 
     def get_type_name(self):
-        return self.type_label
+        return self.type_name
 
 
 class DBObjectColumns(DbObject):
