@@ -3,5 +3,6 @@ python:
     - "3.4"
 install:
   pip install flake8
-before_script:
+#before_script:
+script:
   flake8 rsr/
