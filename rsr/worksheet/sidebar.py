@@ -56,6 +56,7 @@ class IntrospectionItem(SidebarItem):
         super(IntrospectionItem, self).__init__(worksheet)
         self.conn = None
         self.sig_schema = None
+        self.sig_conn_state = None
 
         l = Gtk.Label()
         self.col_insensitive = l.get_style_context().get_color(
@@ -128,18 +129,30 @@ class IntrospectionItem(SidebarItem):
         # Update signal handlers and internal state if needed
         if worksheet.connection != self.conn:
             self.object_list.get_model().get_model().clear()
+            # TODO: Write a helper that connects and disconnects automagically
+            #   storing a reference to the sighandler ID on its own.
+            #   Something like utils.connect(self, self.conn.schema,
+            #   'refreshed', callback), utils.disconnect_all(self,
+            #   self.conn.schema) or disconnect by callback function...?
+            #   This reference saving in self.sig_* is annoying.
             if self.sig_schema is not None:
                 self.conn.schema.disconnect(self.sig_schema)
                 self.sig_schema = None
+            if self.sig_conn_state is not None:
+                self.conn.disconnect(self.sig_conn_state)
+                self.sig_conn_state = None
             self.conn = worksheet.connection
             if self.conn is not None:
+                self.conn.connect('state-changed', self.on_connstate_changed)
                 self.conn.schema.connect('refreshed', self.on_schema_refreshed)
                 self.on_schema_refreshed(self.conn.schema)
+            self.on_connstate_changed(self.conn)
         else:
             return
 
+    def on_connstate_changed(self, conn):
         # Update stack view to display correct page
-        if self.conn is None:
+        if conn is None or not conn.is_open():
             self.widget.set_visible_child_name('please')
         else:
             self.widget.set_visible_child_name('objects')
