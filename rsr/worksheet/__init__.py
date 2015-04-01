@@ -55,10 +55,11 @@ class Worksheet(Gtk.VPaned):
             conn_key = self.connection.key
         else:
             conn_key = None
+        sidebar_width = self._paned_sidebar.get_child2().get_allocation().width
         return {
             'content': self.editor.get_text(),
             'split_pos': self.get_position(),
-            'sidebar_width': self._paned_sidebar.get_position(),
+            'sidebar_width': sidebar_width,
             'connection': conn_key,
             'cursor': self.editor.get_cursor_position(),
         }
@@ -66,8 +67,8 @@ class Worksheet(Gtk.VPaned):
     def restore_state(self, state):
         self.editor.set_text(state['content'])
         self.set_position(state.get('split_pos', 0))
-        width = self.win.get_allocation().width - 300
-        self._paned_sidebar.set_position(state.get('sidebar_width', width))
+        pos = self.win.get_allocation().width - state.get('sidebar_width', 300)
+        self._paned_sidebar.set_position(pos)
         self.set_connection(state.get('connection', None))
         self.editor.set_cursor_position(state.get('cursor', None))
 
