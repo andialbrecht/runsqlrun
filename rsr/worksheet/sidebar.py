@@ -1,5 +1,7 @@
 from gi.repository import Gtk, Pango, GObject
 
+from rsr.utils import regex_fuzzy_match
+
 
 class Sidebar(Gtk.Box):
 
@@ -79,21 +81,21 @@ class IntrospectionItem(SidebarItem):
 
         # Search entry
         entry = Gtk.Entry()
+        self.entry = entry
         entry.set_placeholder_text('Search (Ctrl+/)')
         box.pack_start(entry, False, False, 0)
 
-        # Object list
-        store = Gtk.ListStore(object, str, str)
-        self.store = store
-        store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
         tree = Gtk.TreeView()
         self.object_list = tree
-        tree.set_model(store)
+        model_filter = self._create_object_model([])
+        tree.set_model(model_filter)
         col = Gtk.TreeViewColumn('Object', Gtk.CellRendererText(), markup=2)
         tree.append_column(col)
         sw = Gtk.ScrolledWindow()
         sw.add(tree)
         box.pack_start(sw, True, True, 0)
+
+        entry.connect('changed', lambda e: tree.get_model().refilter())
 
         stack.add_titled(box, 'objects', 'Object list')
 
@@ -104,10 +106,28 @@ class IntrospectionItem(SidebarItem):
         worksheet.connect('connection-changed', self.on_connection_changed)
         self.on_connection_changed(worksheet)
 
+    def _create_object_model(self, data):
+        # Object list
+        store = Gtk.ListStore(object, str, str)
+        store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
+        if data:
+            list(map(store.append, data))
+
+        # Setup filtering
+        def filter_func(model, iter_, data):
+            term = self.entry.get_text().strip()
+            if not term:
+                return True
+            match = regex_fuzzy_match(term, model[iter_][0].name)
+            return match is not None
+        model_filter = store.filter_new()
+        model_filter.set_visible_func(filter_func)
+        return model_filter
+
     def on_connection_changed(self, worksheet):
         # Update signal handlers and internal state if needed
         if worksheet.connection != self.conn:
-            self.store.clear()
+            self.object_list.get_model().get_model().clear()
             if self.sig_schema is not None:
                 self.conn.schema.disconnect(self.sig_schema)
                 self.sig_schema = None
@@ -125,7 +145,8 @@ class IntrospectionItem(SidebarItem):
             self.widget.set_visible_child_name('objects')
 
     def on_schema_refreshed(self, schema):
-        self.store.clear()
+        # Prepare data for list store
+        data = []
         for item in schema.get_objects():
             markup = '{}\n<span font-size="small" color="{}">{}'.format(
                 *list(map(GObject.markup_escape_text, [
@@ -135,10 +156,21 @@ class IntrospectionItem(SidebarItem):
                 markup += ': {}'.format(
                     GObject.markup_escape_text(item.description))
             markup += '</span>'
-            self.store.append([item, item.name, markup])
-        iter_ = self.store.get_iter_first()
+            data.append([item, item.name, markup])
+        # The model is re-created on each refresh. Otherwise GTK reports
+        # some strange errors about TreeModelFilter and ListStore not in
+        # sync. The app seems to run fine anyway, but it bloats the terminal
+        # with Gtk Critical error messages.
+        # This seems to happen, when the ListStore is changed after the
+        # model filter is created.
+        model_filter = self._create_object_model(data)
+        # assign new model to tree view
+        self.object_list.set_model(model_filter)
+        # scroll to first entry
+        store = model_filter.get_model()
+        iter_ = store.get_iter_first()
         if iter_ is not None:
-            self.object_list.scroll_to_cell(self.store.get_path(iter_), None,
+            self.object_list.scroll_to_cell(store.get_path(iter_), None,
                                             False, 0, 0)
 
     def get_widget(self):

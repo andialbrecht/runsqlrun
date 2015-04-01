@@ -1,6 +1,6 @@
-import re
-
 from gi.repository import GtkSource, GObject
+
+from rsr.utils import regex_fuzzy_match
 
 import sqlparse
 
@@ -19,13 +19,6 @@ KEYWORDS.extend([
     'UNION', 'USING',
 ])
 KEYWORDS = set(KEYWORDS)
-
-
-def matches(word1, word2):
-    if word1 is None:
-        return None
-    regex = r'.*?'.join(r'({})'.format(re.escape(y)) for y in word1)
-    return re.search(regex, word2, re.U | re.I)
 
 
 class ProviderMixin:
@@ -116,7 +109,7 @@ class SqlKeywordProvider(GObject.GObject, GtkSource.CompletionProvider,
         word = self._get_word(context)
         proposals = []
         for keyword in KEYWORDS:
-            match = matches(word, keyword)
+            match = regex_fuzzy_match(word, keyword)
             if match is not None:
                 proposals.append(SqlKeywordProposal(keyword, match))
         proposals.sort(key=lambda x: x.score)
@@ -196,7 +189,7 @@ class DbObjectProvider(GObject.GObject, GtkSource.CompletionProvider,
 
     def _add_match(self, proposals, word, completion, obj):
         """Adds a proposal for obj if word matches completion."""
-        match = matches(word, completion)
+        match = regex_fuzzy_match(word, completion)
         if match is not None:
             proposals.append(DbObjectProposal(obj, match))
 
