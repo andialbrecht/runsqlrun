@@ -22,8 +22,9 @@ class Sidebar(Gtk.Box):
         self.pack_start(switcher, False, False, 0)
 
         stack = Gtk.Stack()
-        item1 = IntrospectionItem(worksheet)
-        stack.add_titled(item1.get_widget(), item1.name, item1.title)
+        self.introspection = IntrospectionItem(worksheet)
+        stack.add_titled(self.introspection.get_widget(),
+                         self.introspection.name, self.introspection.title)
         stack.add_titled(Gtk.Label('Context'), 'context', 'Context')
         self.pack_start(stack, True, True, 0)
 
@@ -83,7 +84,7 @@ class IntrospectionItem(SidebarItem):
         # Search entry
         entry = Gtk.Entry()
         self.entry = entry
-        entry.set_placeholder_text('Search (Ctrl+/)')
+        entry.set_placeholder_text('Search (Alt+Shift+F)')
         box.pack_start(entry, False, False, 0)
 
         tree = Gtk.TreeView()
@@ -188,3 +189,9 @@ class IntrospectionItem(SidebarItem):
 
     def get_widget(self):
         return self.widget
+
+    def search(self):
+        if self.conn is None or not self.conn.is_open():
+            return
+        self.widget.set_visible_child_name('objects')
+        self.entry.grab_focus()

@@ -121,6 +121,12 @@ commands = {
                 'description': 'Show / hide the sidebar in this editor',
                 'shortcut': '<Alt><Shift>S',
                 'callback': 'sidebar.toggle'
+            },
+            'schema-search': {
+                'label': 'Search database objects',
+                'description': 'Search objects in database schema',
+                'shortcut': '<Alt><Shift>F',
+                'callback': 'sidebar.introspection.search'
             }
         }
     }
