@@ -127,7 +127,13 @@ commands = {
                 'description': 'Search objects in database schema',
                 'shortcut': '<Alt><Shift>F',
                 'callback': 'sidebar.introspection.search'
-            }
+            },
+            'grab-focus': {
+                'label': 'Focus on editor',
+                'description': 'Always sets the focus on the current editor',
+                'shortcut': 'Escape',
+                'callback': 'editor.grab_focus'
+            },
         }
     }
 }
