@@ -3,7 +3,7 @@ import json
 from functools import partial
 
 import xdg.BaseDirectory
-from gi.repository import Gio, GLib, Gtk
+from gi.repository import Gio, Gtk
 
 from rsr import config
 from rsr.commands import commands
@@ -17,8 +17,6 @@ class Application(Gtk.Application):
         super(Application, self).__init__(
             application_id='org.runsqlrun',
             flags=Gio.ApplicationFlags.FLAGS_NONE)
-        GLib.set_application_name('RunSQLRun')
-        GLib.set_prgname('runsqlrun')
         self.win = None
 
     def build_app_menu(self):

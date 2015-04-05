@@ -1,4 +1,5 @@
 from gi.repository import Gio, Gtk
+from gi.repository.GdkPixbuf import Pixbuf
 
 from rsr import __version__
 from rsr.commands import commands
@@ -59,6 +60,8 @@ class HeaderBar(Gtk.HeaderBar):
 
     def on_show_about(self, *args):
         dlg = Gtk.AboutDialog('RunSQLRun', self.win)
+        logo = Pixbuf.new_from_resource('/org/runsqlrun/icons/128x128/runsqlrun.png')
+        dlg.set_logo(logo)
         dlg.set_program_name('RunSQLRun')
         dlg.set_version(__version__)
         dlg.set_copyright('2015 Andi Albrecht <albrecht.andi@gmail.com>')

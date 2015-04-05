@@ -1,4 +1,5 @@
 from gi.repository import Gtk, GObject
+from gi.repository.GdkPixbuf import Pixbuf
 
 from rsr.connections.ui import ConnectionIndicator
 from rsr.docview import DocViewer
@@ -12,6 +13,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.app = app
 
         self.set_default_size(800, 600)
+        self.set_icon(Pixbuf.new_from_resource(
+            '/org/runsqlrun/icons/runsqlrun.svg'))
 
         self.headerbar = HeaderBar(self)
         self.set_titlebar(self.headerbar)
