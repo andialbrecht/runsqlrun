@@ -89,6 +89,7 @@ class IntrospectionItem(SidebarItem):
 
         tree = Gtk.TreeView()
         self.object_list = tree
+        tree.set_headers_visible(False)
         model_filter = self._create_object_model([])
         tree.set_model(model_filter)
         col = Gtk.TreeViewColumn('Object', Gtk.CellRendererText(), markup=2)
