@@ -49,6 +49,7 @@ class SidebarItem:
         raise NotImplementedError()
 
 
+# TODO: Split up stack pages in separate classes.
 class IntrospectionItem(SidebarItem):
     name = 'schema'
     title = 'DB Schema'
