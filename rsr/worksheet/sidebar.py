@@ -87,6 +87,7 @@ class IntrospectionItem(SidebarItem):
         entry.set_placeholder_text('Search (Alt+Shift+F)')
         box.pack_start(entry, False, False, 0)
 
+        # Tree view
         tree = Gtk.TreeView()
         self.object_list = tree
         tree.set_headers_visible(False)
@@ -97,10 +98,15 @@ class IntrospectionItem(SidebarItem):
         sw = Gtk.ScrolledWindow()
         sw.add(tree)
         box.pack_start(sw, True, True, 0)
+        tree.connect('row-activated', self.on_object_row_activated)
 
         entry.connect('changed', lambda e: tree.get_model().refilter())
 
         stack.add_titled(box, 'objects', 'Object list')
+
+        # Page 3: Object details
+        self.object_details = ObjectDetails(self)
+        stack.add_titled(self.object_details, 'object-details', 'Details')
 
         # Set main widget
         self.widget = stack
@@ -188,6 +194,13 @@ class IntrospectionItem(SidebarItem):
             self.object_list.scroll_to_cell(store.get_path(iter_), None,
                                             False, 0, 0)
 
+    def on_object_row_activated(self, treeview, path, column):
+        model = treeview.get_model()
+        obj = model.get_value(model.get_iter(path), 0)
+        self.object_details.set_object(obj)
+        self.widget.set_visible_child_name('object-details')
+        self.object_details.btn_back.grab_focus()
+
     def get_widget(self):
         return self.widget
 
@@ -196,3 +209,31 @@ class IntrospectionItem(SidebarItem):
             return
         self.widget.set_visible_child_name('objects')
         self.entry.grab_focus()
+
+
+class ObjectDetails(Gtk.Box):
+
+    def __init__(self, introspection):
+        super(ObjectDetails, self).__init__()
+        self.introspection = introspection
+        self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.set_spacing(6)
+        self.lbl_name = Gtk.Label()
+        self.lbl_name.set_valign(Gtk.Align.START)
+        self.lbl_description = Gtk.Label()
+        self.lbl_description.set_valign(Gtk.Align.START)
+        self.btn_back = Gtk.Button('Back')
+        self.btn_back.connect('activate', self.on_back_button_activated)
+        self.pack_start(self.btn_back, False, False, 0)
+        self.pack_start(self.lbl_name, False, False, 0)
+        self.pack_start(self.lbl_description, False, False, 0)
+
+    def on_back_button_activated(self, btn):
+        self.introspection.widget.set_visible_child_name('objects')
+        self.introspection.object_list.grab_focus()
+
+    def set_object(self, obj):
+        self.lbl_name.set_markup('{}: <b>{}</b>'.format(
+            GObject.markup_escape_text(obj.get_type_name()),
+            GObject.markup_escape_text(obj.name)))
+        self.lbl_description.set_text(obj.description or '')
