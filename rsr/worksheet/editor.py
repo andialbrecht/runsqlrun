@@ -71,10 +71,12 @@ class Editor(GtkSource.View):
             lstripped = statement.lstrip()
             offset += len(statement) - len(lstripped)
             offset_start = offset
+            # calculate end before stripping statement
+            offset_end = offset + len(statement)
             statement = lstripped.rstrip()
             iter_ = buf.get_iter_at_offset(offset)
             buf.create_source_mark(None, 'stmt_start', iter_)
-            offset += len(statement)
+            offset = offset_end
             iter_ = buf.get_iter_at_offset(offset)
             buf.create_source_mark(None, 'stmt_end', iter_)
             if offset_start <= cur_pos <= offset:
