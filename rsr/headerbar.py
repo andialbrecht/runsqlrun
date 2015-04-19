@@ -60,7 +60,8 @@ class HeaderBar(Gtk.HeaderBar):
 
     def on_show_about(self, *args):
         dlg = Gtk.AboutDialog('RunSQLRun', self.win)
-        logo = Pixbuf.new_from_resource('/org/runsqlrun/icons/128x128/runsqlrun.png')
+        logo = Pixbuf.new_from_resource(
+            '/org/runsqlrun/icons/128x128/runsqlrun.png')
         dlg.set_logo(logo)
         dlg.set_program_name('RunSQLRun')
         dlg.set_version(__version__)
