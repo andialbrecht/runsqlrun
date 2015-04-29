@@ -83,19 +83,19 @@ commands = {
                 'callback': 'assume_connection',
                 'args': [True]
             },
+            'openconnection': {
+                'label': 'Open assigned connection',
+                'description': 'Opens the currently assigned connection',
+                'shortcut': 'F10',
+                'callback': 'open_connection',
+            },
             'dbdisconnect': {
                 'label': 'Disconnect',
                 'description': 'Close database connection',
                 'icon': 'gtk-disconnect',
-                'shortcut': 'F10',
+                'shortcut': 'F11',
                 'callback': 'set_connection',
                 'args': [None]
-            },
-            'openconnection': {
-                'label': 'Open assigned connection',
-                'description': 'Opens the currently assigned connection',
-                'shortcut': 'F11',
-                'callback': 'open_connection',
             },
             'format': {
                 'label': 'Format SQL',
