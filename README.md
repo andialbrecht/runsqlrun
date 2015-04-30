@@ -1,5 +1,7 @@
 # RunSQLRun
 
+[![Build Status](https://travis-ci.org/andialbrecht/runsqlrun.svg)](https://travis-ci.org/andialbrecht/runsqlrun)
+
 RunSQLRun is a database query tool.
 
 ![Screenshot of RunSQLRun](http://runsqlrun.org/static/runsqlrun_query.png)

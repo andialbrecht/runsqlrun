@@ -1,3 +1,4 @@
-syntax: glob
 __pycache__
+.coverage
+
 data/runsqlrun.gresource

@@ -83,15 +83,15 @@ WELCOME_MSG = """/* Start typing your SQL here.
         Ctrl+N  Open new SQL Editor
     Ctrl+Enter  Run statement at cursor
             F9  Choose or add a database connection
-           F10  Disconnect from database
-           F11  Open db connection without executing a query
+           F10  Open db connection without executing a query
                 This is needed to have completions for database objects.
+           F11  Disconnect from database and revoke assignment from editor.
         Ctrl+W  Close current SQL editor
         Ctrl+Q  Close RunSQLRun
 
    Any feedback is highly appreciated!
 
-   Issue tracker: https://bitbucket.org/andialbrecht/runsqlrun
+   Issue tracker: https://github.com/andialbrecht/runsqlrun
 
    Have fun!
 

@@ -1,3 +1,18 @@
+Version 0.4.1 (2015-04-30)
+==========================
+
+* Shortcuts for disconnecting an editor from an connection and connecting to
+  db have changed. The sequence is now
+  F9  - assign an connection
+  F10 - connect to database
+  F11 - disconnect (and revoke assignment)
+
+Bugs fixed
+* Fix a regression in statement splitter (#7).
+* Fix a bug when building connection parameters for Oracle (#2).
+* Improve statement preparation for Oracle (#5).
+
+
 Version 0.4.0 (2015-03-02)
 ==========================
 

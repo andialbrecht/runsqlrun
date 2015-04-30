@@ -3,5 +3,7 @@
   <gresource prefix="/org/runsqlrun">
     <file preprocess="xml-stripblanks">appmenu.ui</file>
     <file preprocess="xml-stripblanks">connection_dialog.ui</file>
+    <file alias="icons/runsqlrun.svg" compressed="true" preprocess="xml-stripblanks">icons/runsqlrun.svg</file>
+    <file>icons/128x128/runsqlrun.png</file>
   </gresource>
 </gresources>

@@ -1,3 +1,5 @@
+import sqlparse
+
 from rsr.connections.backends.base import BaseDriver
 from rsr.schema import dbo
 from rsr.schema.base import BaseSchemaProvider
@@ -32,18 +34,43 @@ class Driver(BaseDriver):
     schema_class = OracleSchema
 
     def get_connect_params(self):
-        if self.config.get('port', None):
-            dsn = cx_Oracle.makedsn(self.config['host'],
-                                    self.config['port'],
-                                    self.config['db'])
+        # derived from sqlalchemy.databases.oracle
+        if self.config.get('db'):
+            # if we have a database, then we have a remote host
+            if self.config.get('port'):
+                port = int(self.config.get('port'))
+            else:
+                port = 1521
+            dsn = self.dbapi.makedsn(
+                self.config.get('host', 'localhost'), port,
+                self.config.get('db'))
         else:
-            dsn = self.config['db']
-        conn_str = '%s/%s@%s' % (self.config.get('username'),
-                                 self.config.get('password'),
-                                 dsn)
-        return (conn_str,), {}
+            # we have a local tnsname
+            dsn = self.config.get('host', 'localhost')
+
+        opts = dict(user=self.config.get('username'),
+                    password=self.config.get('password'),
+                    dsn=dsn)
+        # TODO: Implement mode setting for Oracle connections.
+        # This is the old code from CrunchyFCrog:
+        # if 'mode' in url.query:
+        #     opts['mode'] = url.query['mode']
+        #     if isinstance(opts['mode'], basestring):
+        #         mode = opts['mode'].upper()
+        #         if mode == 'SYSDBA':
+        #             opts['mode'] = self.dbapi.SYSDBA
+        #         elif mode == 'SYSOPER':
+        #             opts['mode'] = self.dbapi.SYSOPER
+        #         else:
+        #             opts['mode'] = int(opts['mode'])
+        return tuple(), opts
 
     def prepare_sql(self, sql):
+        """Prepare statement to be executed."""
+        # Oracle doesn't like trailing semicolons. So remove them.
+        # To do this properly we need to strip comments.
+        # See issue5.
+        sql = sqlparse.format(sql, strip_comments=True)
         sql = sql.strip()
         if sql.endswith(';'):
             sql = sql[:-1]
