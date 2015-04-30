@@ -23,6 +23,7 @@ each database management system you'd like to connect to:
 - PostgreSQL: python3-psycopg2
 - MariaDB/MySQL: python3-mysql.connector
 - Oracle: cx_Oracle
+- SQLite: Your Python distribution should ship a module for this database.
 
 ## Run RunSQLRun
 
