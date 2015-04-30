@@ -1,5 +1,5 @@
-Development Version
-===================
+Version 0.4.1 (2015-04-30)
+==========================
 
 * Shortcuts for disconnecting an editor from an connection and connecting to
   db have changed. The sequence is now
