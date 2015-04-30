@@ -2,10 +2,9 @@ language: "python"
 python:
     - "3.4"
 install:
-  pip install flake8 pytest pytest-cov
+  pip install flake8 pytest pytest-cov sqlparse
 before_script:
   flake8 rsr/
 script:
-  - echo $PYTHONPATH
   - export PYTHONPATH=`pwd`:$PYTHONPATH
   - py.test --cov=rsr --cov-report=term
