@@ -1,3 +1,5 @@
+import sqlparse
+
 from rsr.connections.backends.base import BaseDriver
 from rsr.schema import dbo
 from rsr.schema.base import BaseSchemaProvider
@@ -64,6 +66,11 @@ class Driver(BaseDriver):
         return tuple(), opts
 
     def prepare_sql(self, sql):
+        """Prepare statement to be executed."""
+        # Oracle doesn't like trailing semicolons. So remove them.
+        # To do this properly we need to strip comments.
+        # See issue5.
+        sql = sqlparse.format(sql, strip_comments=True)
         sql = sql.strip()
         if sql.endswith(';'):
             sql = sql[:-1]

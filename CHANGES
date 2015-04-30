@@ -10,6 +10,7 @@ Development Version
 Bugs fixed
 * Fix a regression in statement splitter (#7).
 * Fix a bug when building connection parameters for Oracle (#2).
+* Improve statement preparation for Oracle (#5).
 
 
 Version 0.4.0 (2015-03-02)
