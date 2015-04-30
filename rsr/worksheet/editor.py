@@ -65,27 +65,27 @@ class Editor(GtkSource.View):
 
         cur_pos = buf.get_iter_at_mark(buf.get_insert()).get_offset()
 
+        # Mark statements (aka the statement splitter)
         offset = 0
         for statement in statements:
-            # Remove leading and trailing whitespaces and recalculate offset.
-            lstripped = statement.lstrip()
-            offset += len(statement) - len(lstripped)
-            offset_start = offset
-            # calculate end before stripping statement
-            offset_end = offset + len(statement)
-            statement = lstripped.rstrip()
-            iter_ = buf.get_iter_at_offset(offset)
+            # Calculate offsets of stripped statement
+            offset_start = offset + (len(statement) - len(statement.lstrip()))
+            offset_end = offset_start + len(statement.strip())
+            # Create source marks
+            iter_ = buf.get_iter_at_offset(offset_start)
             buf.create_source_mark(None, 'stmt_start', iter_)
-            offset = offset_end
-            iter_ = buf.get_iter_at_offset(offset)
+            iter_ = buf.get_iter_at_offset(offset_end)
             buf.create_source_mark(None, 'stmt_end', iter_)
-            if offset_start <= cur_pos <= offset:
+            # Handle current statement
+            if offset_start <= cur_pos <= offset_end:
                 parsed = sqlparse.parse(statement)
                 if parsed:
                     self._parsed = parsed[0]
                 else:
                     self._parsed = None
                 self.emit('parsed-statement-changed')
+            # Update offset
+            offset += len(statement)
 
     def get_cursor_position(self):
         mark = self.buffer.get_insert()
