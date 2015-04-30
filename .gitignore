@@ -1,2 +1,4 @@
 __pycache__
+.coverage
+
 data/runsqlrun.gresource
