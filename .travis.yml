@@ -6,4 +6,6 @@ install:
 before_script:
   flake8 rsr/
 script:
-  py.test --cov=rsr --cov-report=term
+  - echo $PYTHONPATH
+  - export PYTHONPATH=`pwd`:$PYTHONPATH
+  - py.test --cov=rsr --cov-report=term
