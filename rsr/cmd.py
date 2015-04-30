@@ -1,3 +1,4 @@
+import os
 import signal
 import sys
 from argparse import ArgumentParser
@@ -10,6 +11,10 @@ from rsr.app import Application
 parser = ArgumentParser(prog='runsqlrun', description='Run SQL statements')
 parser.add_argument(
     '--version', action='version', version='%(prog)s ' + __version__)
+
+# See issue3. Unfortunately this needs to be done before opening
+# any Oracle connection.
+os.environ.setdefault('NLS_LANG', '.AL32UTF8')
 
 
 def main():
