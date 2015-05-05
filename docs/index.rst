@@ -11,7 +11,7 @@ RunSQLRun is a SQL editor and query tool for Linux.
 .. image:: images/screenshot.png
   :name: Screenshot of RunSQLRun
 
-The following database are supported:
+The following databases are supported:
 
 - PostgreSQL
 - MariaDB / MySQL
