@@ -2,3 +2,4 @@ __pycache__
 .coverage
 
 data/runsqlrun.gresource
+data/icons/128x128/runsqlrun.png
