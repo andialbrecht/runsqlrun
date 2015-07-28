@@ -34,6 +34,8 @@ class ProviderMixin:
         activation = context.get_activation()
         requested = activation != GtkSource.CompletionActivation.USER_REQUESTED
         end_iter = context.get_iter()
+        if isinstance(end_iter, tuple):  # changed in GTK
+            end_iter = end_iter[1]
         start_iter = end_iter.copy()
         while not start_iter.starts_line():
             start_iter.backward_char()
