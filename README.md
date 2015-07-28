@@ -16,6 +16,7 @@ on other distributions:
 - python3-gi
 - python3-keyring
 - python3-sqlparse
+- inkscape
 
 In addition you'll need to install a database driver for
 each database management system you'd like to connect to:
