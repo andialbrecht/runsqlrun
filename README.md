@@ -17,6 +17,7 @@ on other distributions:
 - python3-keyring
 - python3-sqlparse
 - inkscape
+- libglib2.0-bin (for glib-compile-resources)
 
 In addition you'll need to install a database driver for
 each database management system you'd like to connect to:

@@ -1,4 +1,9 @@
-icons:
+all: icons compile-resources
+
+data/icons/128x128:
+	mkdir -p data/icons/128x128
+
+icons: data/icons/128x128
 	inkscape -z -f data/icons/runsqlrun.svg -w 128 -e data/icons/128x128/runsqlrun.png
 
 compile-resources:
