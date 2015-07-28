@@ -322,7 +322,7 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
                 return self._col_bg_selected
             else:
                 return self._col_bg_normal
-        value = self.data[iter_.user_data][column - 1]
+        value = self.get_raw_value(iter_, column)
         if value is None:
             return self._markup_none(value)
         elif self.is_blob_value(value):
