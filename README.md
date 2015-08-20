@@ -16,6 +16,8 @@ on other distributions:
 - python3-gi
 - python3-keyring
 - python3-sqlparse
+- python3-xdg
+- python3-cairo
 - inkscape
 - libglib2.0-bin (for glib-compile-resources)
 
