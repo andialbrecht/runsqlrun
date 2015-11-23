@@ -3,6 +3,10 @@ import signal
 import sys
 from argparse import ArgumentParser
 
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('GtkSource', '3.0')
+
 from gi.repository import Gio, GLib
 
 from rsr import __version__
