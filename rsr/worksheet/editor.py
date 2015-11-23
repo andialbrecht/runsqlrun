@@ -1,5 +1,5 @@
 import cairo
-from gi.repository import Gtk, GtkSource, Pango, GObject
+from gi.repository import Gtk, GtkSource, Pango, GObject, Gio
 
 import sqlparse
 
@@ -26,9 +26,7 @@ class Editor(GtkSource.View):
         lang_manager = GtkSource.LanguageManager()
         self.buffer.set_language(lang_manager.get_language('sql'))
         self.set_buffer(self.buffer)
-        # TODO: Move to configuration
-        font_desc = Pango.FontDescription.from_string('Ubuntu Mono 16')
-        self.modify_font(font_desc)
+        self._setup_font()
 
         self.set_show_line_numbers(True)
         self.set_highlight_current_line(True)
@@ -45,6 +43,17 @@ class Editor(GtkSource.View):
         self._setup_completions()
 
         self.buffer.connect('changed', self.on_buffer_changed)
+
+    def _setup_font(self):
+        # TODO: Move to configuration
+        schema = 'org.gnome.desktop.interface'
+        if schema in Gio.Settings.list_schemas():
+            settings = Gio.Settings(schema)
+            font_name = settings.get_string('monospace-font-name')
+        else:
+            font_name = 'Monospace 13'
+        font_desc = Pango.FontDescription.from_string(font_name)
+        self.modify_font(font_desc)
 
     def _setup_completions(self):
         completion = self.get_completion()
