@@ -7,7 +7,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0')
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, Gtk
 
 from rsr import __version__
 from rsr.app import Application
@@ -30,6 +30,9 @@ def main():
 
     resource = Gio.resource_load('data/runsqlrun.gresource')
     Gio.Resource._register(resource)
+
+    Gtk.Settings.get_default().set_property(
+        'gtk-application-prefer-dark-theme', True)
 
     app = Application()
     sys.exit(app.run(sys.argv))
