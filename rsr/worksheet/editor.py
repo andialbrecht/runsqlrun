@@ -19,6 +19,10 @@ class Editor(GtkSource.View):
         self.worksheet = worksheet
         self._parsed = None
 
+        # Disable blinking cursor
+        settings = self.get_settings()
+        settings.set_property('gtk-cursor-blink', False)
+
         sm = GtkSource.StyleSchemeManager()
         sm.append_search_path(paths.theme_dir)
         self.buffer.set_style_scheme(sm.get_scheme('monokai-extended'))
