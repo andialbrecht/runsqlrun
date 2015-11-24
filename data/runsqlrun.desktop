@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=RunSQLRun
+GenericName=Database GUI
+X-GNOME-FullName=RunSQLRun Database GUI
+Comment=Query your database
+Exec=runsqlrun
+Terminal=false
+Type=Application
+Icon=runsqlrun
+MimeType=application/sql;
+StartupNotify=true
+Categories=GTK;Development;

@@ -1,0 +1,6 @@
+include data/runsqlrun.desktop
+include data/runsqlrun.gresource.xml
+include data/*.ui
+include data/icons/*.svg
+include data/icons/128x128/*.png
+include data/themes/*xml

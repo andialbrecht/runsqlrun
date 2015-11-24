@@ -1,5 +1,7 @@
 __pycache__
 .coverage
+*.pyc
+*.egg-info
 
 data/runsqlrun.gresource
 data/icons/128x128/runsqlrun.png

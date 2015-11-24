@@ -10,6 +10,7 @@ gi.require_version('GtkSource', '3.0')
 from gi.repository import Gio, GLib, Gtk
 
 from rsr import __version__
+from rsr import paths
 from rsr.app import Application
 
 parser = ArgumentParser(prog='runsqlrun', description='Run SQL statements')
@@ -28,7 +29,8 @@ def main():
     GLib.set_application_name('RunSQLRun')
     GLib.set_prgname('runsqlrun')
 
-    resource = Gio.resource_load('data/runsqlrun.gresource')
+    resource = Gio.resource_load(
+        os.path.join(paths.data_dir, 'runsqlrun.gresource'))
     Gio.Resource._register(resource)
 
     Gtk.Settings.get_default().set_property(
