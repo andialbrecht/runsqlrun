@@ -1,5 +1,5 @@
 import cairo
-from gi.repository import Gtk, GtkSource, Pango, GObject, Gio
+from gi.repository import Gtk, GtkSource, Pango, GObject, Gio, Gdk
 
 import sqlparse
 
@@ -42,6 +42,12 @@ class Editor(GtkSource.View):
         renderer = StatementGutter(self.buffer)
         gutter = self.get_gutter(Gtk.TextWindowType.LEFT)
         gutter.insert(renderer, 1)
+        # Redraw statement highlight when cursor moves to correctly
+        # highlight the current statement. Without explicity redrawing
+        # the whole area only the current line is redrawn which will not
+        # remove the highight from the previous statement.
+        self.buffer.connect(
+            'notify::cursor-position', lambda *a: renderer.queue_draw())
 
         # Completions
         self._setup_completions()
@@ -177,21 +183,31 @@ class StatementGutter(GtkSource.GutterRenderer):
         self.buffer = buf
 
     def _in_statement(self, start):
+        cur = self.buffer.get_iter_at_mark(self.buffer.get_insert())
         stmt_start = start.copy()
         marks = self.buffer.get_source_marks_at_iter(stmt_start, 'stmt_start')
         if not marks:
             self.buffer.backward_iter_to_source_mark(stmt_start, 'stmt_start')
         stmt_end = stmt_start.copy()
         self.buffer.forward_iter_to_source_mark(stmt_end, 'stmt_end')
-        return start.in_range(stmt_start, stmt_end)
+        return (start.in_range(stmt_start, stmt_end),
+                cur.in_range(stmt_start, stmt_end))
 
     def do_draw(self, cr, background_area, cell_area, start, end, state):
-        in_statement = self._in_statement(start)
+        in_statement, is_current = self._in_statement(start)
         if not in_statement:
             return
+        style = self.buffer.get_style_scheme()
+        ok, col_default = Gdk.Color.parse(
+            style.get_style('line-numbers').get_property('foreground'))
+        ok, col_highlight = Gdk.Color.parse(
+            style.get_style('selection').get_property('foreground'))
         cr.move_to(cell_area.x, cell_area.y)
         cr.line_to(cell_area.x, cell_area.y + cell_area.height)
         cr.set_line_width(10)
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
-        # cr.set_source_rgba(*tuple(self.color))
+        if is_current:
+            cr.set_source_rgb(*col_highlight.to_floats())
+        else:
+            cr.set_source_rgb(*col_default.to_floats())
         cr.stroke()
