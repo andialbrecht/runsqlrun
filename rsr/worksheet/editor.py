@@ -200,8 +200,9 @@ class StatementGutter(GtkSource.GutterRenderer):
         style = self.buffer.get_style_scheme()
         ok, col_default = Gdk.Color.parse(
             style.get_style('line-numbers').get_property('foreground'))
-        ok, col_highlight = Gdk.Color.parse(
-            style.get_style('selection').get_property('foreground'))
+        # ok, col_highlight = Gdk.Color.parse(
+        #     style.get_style('selection').get_property('foreground'))
+        ok, col_highlight = Gdk.Color.parse('#1565C0')
         cr.move_to(cell_area.x, cell_area.y)
         cr.line_to(cell_area.x, cell_area.y + cell_area.height)
         cr.set_line_width(10)
