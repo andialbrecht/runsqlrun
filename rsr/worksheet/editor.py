@@ -191,7 +191,7 @@ class StatementGutter(GtkSource.GutterRenderer):
         stmt_end = stmt_start.copy()
         self.buffer.forward_iter_to_source_mark(stmt_end, 'stmt_end')
         return (start.in_range(stmt_start, stmt_end),
-                cur.in_range(stmt_start, stmt_end))
+                stmt_start.get_line() <= cur.get_line() <= stmt_end.get_line())
 
     def do_draw(self, cr, background_area, cell_area, start, end, state):
         in_statement, is_current = self._in_statement(start)
