@@ -59,6 +59,8 @@ class DataList(Gtk.TreeView):
     def on_query_finished(self, query):
         if query.failed or query.result is None:
             return
+        model = CustomTreeModel(query.result, self._selection)
+        self.set_model(model)
         renderer = Gtk.CellRendererText()
         renderer.set_alignment(1, .5)
         renderer.set_property('weight', Pango.Weight.BOLD)
@@ -69,6 +71,7 @@ class DataList(Gtk.TreeView):
         col.set_resizable(True)
         self.append_column(col)
         offset_bg = len(query.description) * 2
+        samples = query.result[:10]
         for idx, item in enumerate(query.description):
             renderer = Gtk.CellRendererText()
             renderer.set_property('ellipsize', Pango.EllipsizeMode.END)
@@ -76,14 +79,34 @@ class DataList(Gtk.TreeView):
                 item[0].replace('_', '__'), renderer, markup=idx + 1,
                 background_rgba=offset_bg + idx)
             col.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
-            col.set_fixed_width(100)
+            col.set_fixed_width(
+                self._get_best_column_width(item[0], idx, samples))
             col.set_resizable(True)
             col.connect('clicked', self.on_column_header_clicked)
             self.append_column(col)
         self.set_headers_clickable(True)
-        model = CustomTreeModel(query.result, self._selection)
-        self.set_model(model)
         self.results.set_current_page(0)
+
+    def _get_best_column_width(self, label, colnum, samples):
+        label = '  %s  ' % label
+        layout = self.create_pango_layout(label)
+        label_width = layout.get_pixel_size()[0]
+        lengths = set()
+        upper_bound = 500
+        model = self.get_model()
+        for row in samples:
+            value = model._get_markup_for_value(row[colnum], markup=False)
+            lines = value.splitlines()
+            if lines:
+                value = lines[0]
+            del lines
+            layout = self.create_pango_layout('  %s  ' % value)
+            lengths.add(layout.get_pixel_size()[0])
+        if lengths:
+            max_length = max(lengths)
+        else:
+            max_length = 1
+        return min(max(max_length, label_width), upper_bound)
 
     def clear_results(self):
         model = self.get_model()
@@ -323,8 +346,11 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
             else:
                 return self._col_bg_normal
         value = self.get_raw_value(iter_, column)
+        return self._get_markup_for_value(value)
+
+    def _get_markup_for_value(self, value, markup=True):
         if value is None:
-            return self._markup_none(value)
+            return self._markup_none(value, markup)
         elif self.is_blob_value(value):
             return self._markup_blob(value)
         else:
@@ -343,7 +369,9 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
         return '<span color="{}">{}</span>'.format(
             self._col_insensitive_str, value)
 
-    def _markup_none(self, value):
+    def _markup_none(self, value, markup):
+        if not markup:
+            return 'NULL'
         return '<span color="{}">NULL</span>'.format(
             self._col_insensitive_str)
 
