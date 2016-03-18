@@ -25,5 +25,7 @@ setup(
          glob.glob('data/themes/*.xml')),
         ('share/applications/',
          ['data/runsqlrun.desktop']),
+        ('share/runsqlrun/',
+         ['data/runsqlrun.gresource']),
     ]
 )
