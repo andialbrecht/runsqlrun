@@ -45,14 +45,33 @@ class DocViewer(Gtk.Notebook):
 
     def add_worksheet(self):
         worksheet = Worksheet(self.win)
-        label = worksheet.get_tab_label()
-        self.append_page(worksheet, label)
+        self.append_page(worksheet, self._get_notebook_label(worksheet))
         worksheet.show_all()
         self.set_current_page(self.get_n_pages() - 1)
         worksheet.editor.grab_focus()
+        return worksheet
+
+    def _get_notebook_label(self, worksheet):
+        # Label from worksheet
+        label = worksheet.get_tab_label()
+        # FIXME: This should be handled by the editor, not the docviewer.
         worksheet.editor.buffer.connect(
             'changed', partial(self.on_buffer_changed, label))
-        return worksheet
+        # Close button
+        img = Gtk.Image.new_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU)
+        _, w, h = Gtk.IconSize.lookup(Gtk.IconSize.MENU)
+        btn = Gtk.Button()
+        btn.set_relief(Gtk.ReliefStyle.NONE)
+        btn.set_focus_on_click(False)
+        btn.add(img)
+        btn.connect(
+            'clicked', lambda b, w: self.remove_worksheet(w), worksheet)
+        # Put it together
+        hbox = Gtk.HBox()
+        hbox.pack_start(label, True, True, 3)
+        hbox.pack_end(btn, False, False, 0)
+        hbox.show_all()
+        return hbox
 
     def on_buffer_changed(self, label, buffer):
         txt = buffer.get_text(*buffer.get_bounds(), include_hidden_chars=False)
@@ -74,6 +93,12 @@ class DocViewer(Gtk.Notebook):
         if num > self.get_n_pages() or num < 0:
             return
         self.set_current_page(num - 1)
+
+    def remove_worksheet(self, worksheet):
+        idx = self.page_num(worksheet)
+        if idx == -1:
+            return
+        self.remove_page(idx)
 
 
 WELCOME_MSG = """/* Start typing your SQL here.
