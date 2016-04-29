@@ -1,5 +1,4 @@
 import csv
-import locale
 import mimetypes
 import tempfile
 import time
@@ -354,8 +353,6 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
             return self._markup_none(value, markup)
         elif self.is_blob_value(value):
             return self._markup_blob(value)
-        elif isinstance(value, (float, int)):
-            return self._markup_number(value)
         else:
             data = str(value)
             lines = data.splitlines()
@@ -377,9 +374,6 @@ class CustomTreeModel(GObject.GObject, Gtk.TreeModel):
             return 'NULL'
         return '<span color="{}">NULL</span>'.format(
             self._col_insensitive_str)
-
-    def _markup_number(self, value):
-        return locale.format('%d', value, grouping=True)
 
     def _markup_blob(self, value):
         mime, _ = Gio.content_type_guess(None, value)
