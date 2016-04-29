@@ -1,5 +1,5 @@
-Development Version
-===================
+Version 0.4.2 (2016-04-29)
+==========================
 
 * Use system fonts when possible.
 * Change shortcuts for changing tabs to Alt+NUMBER (instead of
