@@ -1,3 +1,4 @@
+import locale
 import os
 import signal
 import sys
@@ -20,6 +21,8 @@ parser.add_argument(
 # See issue3. Unfortunately this needs to be done before opening
 # any Oracle connection.
 os.environ.setdefault('NLS_LANG', '.AL32UTF8')
+
+locale.setlocale(locale.LC_ALL, '.'.join(locale.getlocale()))
 
 
 def main():

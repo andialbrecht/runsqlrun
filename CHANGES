@@ -4,6 +4,7 @@ Development Version
 * Use system fonts when possible.
 * Change shortcuts for changing tabs to Alt+NUMBER (instead of
   Control+NUMBER, #21).
+* Improve readability of rowcount and query duration (#19).
 
 
 Version 0.4.1 (2015-04-30)

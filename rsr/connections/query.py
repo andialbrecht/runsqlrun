@@ -1,3 +1,5 @@
+import locale
+
 from gi.repository import GObject
 
 
@@ -26,8 +28,10 @@ class Query(GObject.GObject):
         if not self.finished:
             return None
         if self.result is not None:
-            return '%i rows, %.3f seconds' % (len(self.result),
-                                              self.execution_duration)
+            return '{} rows, {} seconds'.format(
+                locale.format('%d', len(self.result), grouping=True),
+                locale.format('%.3f', self.execution_duration, grouping=True))
         else:
-            return '%i rows affected, %.3f seconds' % (self.rowcount,
-                                                       self.execution_duration)
+            return '{} rows affected, {} seconds'.format(
+                locale.format('%d', self.rowcount, grouping=True),
+                locale.foramt('%.3f', self.execution_duration, grouping=True))

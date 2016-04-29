@@ -1,3 +1,4 @@
+import locale
 import time
 
 from gi.repository import Gtk, GObject, Gio
@@ -341,5 +342,6 @@ class ConnectionIndicator(Gtk.Box):
             GObject.timeout_add(10, self.on_query_changed, self._editor)
         else:
             duration = time.time() - query.start_time
-            self.lbl_query.set_text('Running for %.3f seconds' % duration)
+            self.lbl_query.set_text('Running for {} seconds'.format(
+                locale.format('%.3f', duration, grouping=True)))
             GObject.timeout_add(10, self.on_query_changed, self._editor)
