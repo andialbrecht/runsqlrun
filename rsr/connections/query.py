@@ -34,4 +34,4 @@ class Query(GObject.GObject):
         else:
             return '{} rows affected, {} seconds'.format(
                 locale.format('%d', self.rowcount, grouping=True),
-                locale.foramt('%.3f', self.execution_duration, grouping=True))
+                locale.format('%.3f', self.execution_duration, grouping=True))
