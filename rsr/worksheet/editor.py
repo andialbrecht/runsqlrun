@@ -147,7 +147,8 @@ class Editor(GtkSource.View):
         iter_start, iter_end = self.get_statement_iters_at_cursor()
         stmt = self.buffer.get_text(
             iter_start, iter_end, include_hidden_chars=False)
-        formatted = sqlparse.format(stmt, reindent=True, keyword_case='upper')
+        formatted = sqlparse.format(stmt, reindent=True, keyword_case='upper',
+                                    wrap_after=80)
         self.buffer.delete(iter_start, iter_end)
         self.buffer.insert(iter_start, formatted)
 
