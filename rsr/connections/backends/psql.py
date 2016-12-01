@@ -56,7 +56,7 @@ from pg_catalog.pg_class c
 join pg_catalog.pg_namespace n on n.oid = c.relnamespace
 left join pg_catalog.pg_description d on d.objoid = c.oid
 and d.objsubid = 0
-where c.relkind in ('r', 'v')
+where c.relkind in ('r', 'v', 'm')
   and n.nspname = 'public';
 """
 
