@@ -116,6 +116,12 @@ commands = {
                 'shortcut': '<Alt><Shift>Up',
                 'callback': 'editor.jump_prev'
             },
+            'close': {
+                'label': 'Close editor',
+                'description': 'Closes the current editor',
+                'shortcut': '<Ctrl>W',
+                'callback': 'editor.close',
+            }
         }
     }
 }

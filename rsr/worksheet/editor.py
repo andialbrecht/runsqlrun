@@ -187,6 +187,9 @@ class Editor(GtkSource.View):
             self.buffer.backward_iter_to_source_mark(iter_, 'stmt_start')
         self.buffer.place_cursor(iter_)
 
+    def close(self):
+        self.worksheet.win.docview.close_current_editor()
+
     def get_parsed_statement(self):
         return self._parsed
 
