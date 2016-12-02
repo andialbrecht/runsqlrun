@@ -2,6 +2,7 @@ from gi.repository import Gtk, GObject
 
 from rsr.connections.query import Query
 from rsr.connections.ui import ConnectionDialog
+from rsr.worksheet.context import EditorContext
 from rsr.worksheet.editor import Editor
 from rsr.worksheet.results import Results
 
@@ -19,11 +20,20 @@ class Worksheet(Gtk.VPaned):
         self.app = win.app
         self.connection = None
         self.editor = Editor(self)
+        self.editor_context = EditorContext(self)
         self.results = Results(self)
 
         sw = Gtk.ScrolledWindow()
         sw.add(self.editor)
-        self.add1(sw)
+
+        sw_context = Gtk.ScrolledWindow()
+        sw_context.add(self.editor_context)
+
+        self._context_paned = Gtk.HPaned()
+        self._context_paned.add1(sw_context)
+        self._context_paned.add2(sw)
+        self._context_paned.set_position(200)
+        self.add1(self._context_paned)
 
         self.add2(self.results)
 
@@ -49,6 +59,7 @@ class Worksheet(Gtk.VPaned):
         return {
             'content': self.editor.get_text(),
             'split_pos': self.get_position(),
+            'splitpos_context': self._context_paned.get_position(),
             'connection': conn_key,
             'cursor': self.editor.get_cursor_position(),
         }
@@ -56,6 +67,7 @@ class Worksheet(Gtk.VPaned):
     def restore_state(self, state):
         self.editor.set_text(state['content'])
         self.set_position(state.get('split_pos', 0))
+        self._context_paned.set_position(state.get('splitpos_context', -1))
         self.set_connection(state.get('connection', None))
         self.editor.set_cursor_position(state.get('cursor', None))
 

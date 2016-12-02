@@ -11,6 +11,7 @@ class Editor(GtkSource.View):
 
     __gsignals__ = {
         'parsed-statement-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
+        'statements-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
     }
 
     def __init__(self, worksheet):
@@ -18,6 +19,7 @@ class Editor(GtkSource.View):
         self.buffer = GtkSource.Buffer()
         self.worksheet = worksheet
         self._parsed = None
+        self._statements = []
 
         # Disable blinking cursor
         settings = self.get_settings()
@@ -77,6 +79,7 @@ class Editor(GtkSource.View):
         stack = sqlparse.engine.FilterStack()
         stack.split_statements = True
         statements = [str(stmt) for stmt in stack.run(sql, None)]
+        stmt_data = []
 
         start, end = buf.get_bounds()
         buf.remove_source_marks(start, end, 'stmt_start')
@@ -95,16 +98,28 @@ class Editor(GtkSource.View):
             buf.create_source_mark(None, 'stmt_start', iter_)
             iter_ = buf.get_iter_at_offset(offset_end)
             buf.create_source_mark(None, 'stmt_end', iter_)
+            parsed = sqlparse.parse(statement)
             # Handle current statement
             if offset_start <= cur_pos <= offset_end:
-                parsed = sqlparse.parse(statement)
+                # parsed = sqlparse.parse(statement)
                 if parsed:
                     self._parsed = parsed[0]
                 else:
                     self._parsed = None
                 self.emit('parsed-statement-changed')
+            stmt_data.append({
+                'statement': statement,
+                'start': offset_start,
+                'end': offset_end,
+                'parsed': parsed
+            })
             # Update offset
             offset += len(statement)
+        self._statements = stmt_data
+        self.emit('statements-changed')
+
+    def get_statements(self):
+        return self._statements
 
     def get_cursor_position(self):
         mark = self.buffer.get_insert()
