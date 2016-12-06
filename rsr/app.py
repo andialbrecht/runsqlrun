@@ -13,10 +13,11 @@ from rsr.mainwin import MainWindow
 
 class Application(Gtk.Application):
 
-    def __init__(self):
+    def __init__(self, args):
         super(Application, self).__init__(
             application_id='org.runsqlrun',
             flags=Gio.ApplicationFlags.FLAGS_NONE)
+        self.args = args
         self.win = None
 
     def build_app_menu(self):

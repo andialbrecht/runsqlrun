@@ -17,6 +17,9 @@ from rsr.app import Application
 parser = ArgumentParser(prog='runsqlrun', description='Run SQL statements')
 parser.add_argument(
     '--version', action='version', version='%(prog)s ' + __version__)
+parser.add_argument(
+    '--dark-theme', action='store_true',
+    help='TEMPORARY FLAG: Use a dark theme. This will move to preferences.')
 
 # See issue3. Unfortunately this needs to be done before opening
 # any Oracle connection.
@@ -26,7 +29,7 @@ locale.setlocale(locale.LC_ALL, '.'.join(locale.getlocale()))
 
 
 def main():
-    parser.parse_args()
+    args = parser.parse_args()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     GLib.set_application_name('RunSQLRun')
@@ -36,8 +39,9 @@ def main():
         os.path.join(paths.data_dir, 'runsqlrun.gresource'))
     Gio.Resource._register(resource)
 
-    Gtk.Settings.get_default().set_property(
-        'gtk-application-prefer-dark-theme', True)
+    if args.dark_theme:
+        Gtk.Settings.get_default().set_property(
+            'gtk-application-prefer-dark-theme', True)
 
-    app = Application()
-    sys.exit(app.run(sys.argv))
+    app = Application(args)
+    sys.exit(app.run([]))

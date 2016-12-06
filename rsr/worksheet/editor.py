@@ -25,9 +25,7 @@ class Editor(GtkSource.View):
         settings = self.get_settings()
         settings.set_property('gtk-cursor-blink', False)
 
-        sm = GtkSource.StyleSchemeManager()
-        sm.append_search_path(paths.theme_dir)
-        self.buffer.set_style_scheme(sm.get_scheme('monokai-extended'))
+        self._setup_style_scheme()
 
         lang_manager = GtkSource.LanguageManager()
         self.buffer.set_language(lang_manager.get_language('sql'))
@@ -55,6 +53,22 @@ class Editor(GtkSource.View):
         self._setup_completions()
 
         self.buffer.connect('changed', self.on_buffer_changed)
+
+    def _setup_style_scheme(self):
+        sm = GtkSource.StyleSchemeManager()
+        sm.append_search_path(paths.theme_dir)
+        if self.worksheet.app.args.dark_theme:
+            scheme_name = 'monokai-extended'
+        else:
+            schema = 'org.gnome.gedit.preferences.editor'
+            if schema in Gio.Settings.list_schemas():
+                settings = Gio.Settings(schema)
+                scheme_name = settings.get_string('scheme')
+            else:
+                scheme_name = 'classic'
+        self.buffer.set_style_scheme(sm.get_scheme(scheme_name))
+
+
 
     def _setup_font(self):
         # TODO: Move to configuration
