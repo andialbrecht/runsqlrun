@@ -1,13 +1,67 @@
 import cairo
-from gi.repository import Gtk, GtkSource, Pango, GObject, Gio, Gdk
+from gi.repository import Gtk, GtkSource, Pango, GObject, Gdk
 
 import sqlparse
 
-from rsr import paths
 from rsr.worksheet.completion import SqlKeywordProvider, DbObjectProvider
 
 
-class Editor(GtkSource.View):
+class BaseEditor(GtkSource.View):
+    """Basic, language-agnostic editor."""
+
+    def __init__(self, app, language=None):
+        super(BaseEditor, self).__init__()
+        self.buffer = GtkSource.Buffer()
+        self.set_buffer(self.buffer)
+        self._config = app.config
+
+        # Disable blinking cursor
+        settings = self.get_settings()
+        settings.set_property('gtk-cursor-blink', False)
+        self.set_auto_indent(True)
+        self.set_highlight_current_line(True)
+
+        if language is not None:
+            lang_manager = GtkSource.LanguageManager()
+            self.buffer.set_language(lang_manager.get_language('sql'))
+
+        self._setup_style_scheme()
+        self._setup_font()
+        self._setup_tab_width()
+        self._setup_line_numbers()
+
+    def _setup_style_scheme(self):
+        sm = GtkSource.StyleSchemeManager()
+
+        def set_theme(*args):
+            self.buffer.set_style_scheme(
+                sm.get_scheme(self._config.ui_style_scheme))
+        set_theme()
+        self._config.connect('notify::ui-style-scheme', set_theme)
+
+    def _setup_font(self):
+        def set_font(*args):
+            font_desc = Pango.FontDescription.from_string(
+                self._config.get_fontname())
+            self.modify_font(font_desc)
+        set_font()
+        self._config.connect('notify::font-use-system-font', set_font)
+        self._config.connect('notify::font-fontname', set_font)
+
+    def _setup_tab_width(self):
+        def set_tabwidth(*args):
+            self.set_tab_width(self._config.editor_tab_width)
+        set_tabwidth()
+        self._config.connect('notify::editor-tab-width', set_tabwidth)
+
+    def _setup_line_numbers(self):
+        def set_lino(*args):
+            self.set_show_line_numbers(self._config.editor_show_line_numbers)
+        set_lino()
+        self._config.connect('notify::editor-show-line-numbers', set_lino)
+
+
+class Editor(BaseEditor):
 
     __gsignals__ = {
         'parsed-statement-changed': (GObject.SIGNAL_RUN_LAST, None, ()),
@@ -15,29 +69,10 @@ class Editor(GtkSource.View):
     }
 
     def __init__(self, worksheet):
-        super(Editor, self).__init__()
-        self.buffer = GtkSource.Buffer()
+        super(Editor, self).__init__(worksheet.app, 'sql')
         self.worksheet = worksheet
-        self.config = worksheet.app.config
         self._parsed = None
         self._statements = []
-
-        # Disable blinking cursor
-        settings = self.get_settings()
-        settings.set_property('gtk-cursor-blink', False)
-
-        self._setup_style_scheme()
-
-        lang_manager = GtkSource.LanguageManager()
-        self.buffer.set_language(lang_manager.get_language('sql'))
-        self.set_buffer(self.buffer)
-
-        self._setup_font()
-        self._setup_tab_width()
-        self._setup_line_numbers()
-
-        self.set_auto_indent(True)
-        self.set_highlight_current_line(True)
 
         renderer = StatementGutter(self.buffer)
         gutter = self.get_gutter(Gtk.TextWindowType.LEFT)
@@ -53,36 +88,6 @@ class Editor(GtkSource.View):
         self._setup_completions()
 
         self.buffer.connect('changed', self.on_buffer_changed)
-
-    def _setup_style_scheme(self):
-        sm = GtkSource.StyleSchemeManager()
-
-        def set_theme(*args):
-            self.buffer.set_style_scheme(
-                sm.get_scheme(self.config.ui_style_scheme))
-        set_theme()
-        self.config.connect('notify::ui-style-scheme', set_theme)
-
-    def _setup_font(self):
-        def set_font(*args):
-            font_desc = Pango.FontDescription.from_string(
-                self.config.get_fontname())
-            self.modify_font(font_desc)
-        set_font()
-        self.config.connect('notify::font-use-system-font', set_font)
-        self.config.connect('notify::font-fontname', set_font)
-
-    def _setup_tab_width(self):
-        def set_tabwidth(*args):
-            self.set_tab_width(self.config.editor_tab_width)
-        set_tabwidth()
-        self.config.connect('notify::editor-tab-width', set_tabwidth)
-
-    def _setup_line_numbers(self):
-        def set_lino(*args):
-            self.set_show_line_numbers(self.config.editor_show_line_numbers)
-        set_lino()
-        self.config.connect('notify::editor-show-line-numbers', set_lino)
 
     def _setup_completions(self):
         completion = self.get_completion()

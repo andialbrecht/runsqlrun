@@ -1,4 +1,5 @@
 import csv
+import json
 import mimetypes
 import tempfile
 import time
@@ -6,6 +7,8 @@ from collections import defaultdict
 from enum import Enum
 
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio
+
+from rsr.worksheet.editor import BaseEditor
 
 
 class Results(Gtk.Notebook):
@@ -635,16 +638,43 @@ class DataViewer(Gtk.Dialog):
         Gtk.Dialog.__init__(self, 'Cell Content', parent,
                             Gtk.DialogFlags.DESTROY_WITH_PARENT,
                             None, use_header_bar=True)
+        self.win = parent
         self.set_border_width(10)
         sw = Gtk.ScrolledWindow()
         sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
         self.vbox.pack_start(sw, True, True, True)
-        tv = Gtk.TextView()
+
+        tv = self._initiate_textview(data)
+
         tv.set_border_width(10)
         tv.set_editable(False)
         tv.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
-        tv.get_buffer().set_text(str(data))
         sw.add(tv)
+
         sw.show_all()
         self.resize(650, 550)
+
+    def _initiate_textview(self, data):
+        is_jsonlike, data = self._data2str(data)
+        if is_jsonlike:
+            widget = BaseEditor(self.win.app, 'json')
+        else:
+            widget = Gtk.TextView()
+        widget.get_buffer().set_text(data)
+        return widget
+
+    def _data2str(self, data):
+        # Try to format as JSON data (mainly PostgreSQL)
+        is_jsonlike = False
+        if isinstance(data, (dict, list, tuple)):
+            try:
+                data = json.dumps(data, indent=2)
+                is_jsonlike = True
+            except TypeError:
+                data = str(data)
+        elif data is None:
+            data = ''
+        else:
+            data = str(data)
+        return is_jsonlike, data
