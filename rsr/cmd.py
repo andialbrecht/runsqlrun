@@ -17,6 +17,9 @@ from rsr.app import Application
 parser = ArgumentParser(prog='runsqlrun', description='Run SQL statements')
 parser.add_argument(
     '--version', action='version', version='%(prog)s ' + __version__)
+parser.add_argument(
+    '--experimental', action='store_true',
+    help='Enable experimental features.')
 
 # See issue3. Unfortunately this needs to be done before opening
 # any Oracle connection.

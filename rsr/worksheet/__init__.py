@@ -30,7 +30,8 @@ class Worksheet(Gtk.VPaned):
         sw_context.add(self.editor_context)
 
         self._context_paned = Gtk.HPaned()
-        self._context_paned.add1(sw_context)
+        if self.app.args.experimental:
+            self._context_paned.add1(sw_context)
         self._context_paned.add2(sw)
         self._context_paned.set_position(200)
         self.add1(self._context_paned)
