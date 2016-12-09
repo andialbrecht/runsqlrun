@@ -1,6 +1,15 @@
-class SchemaProvider:
+from gi.repository import GObject
+
+
+class SchemaProvider(GObject.GObject):
+
+    __gsignals__ = {
+        'changed': (GObject.SIGNAL_RUN_LAST, None,
+                    tuple())
+    }
 
     def __init__(self, connection):
+        GObject.GObject.__init__(self)
         self.connection = connection
         self._objects = {}
 
@@ -15,6 +24,7 @@ class SchemaProvider:
         if self.backend is None:
             return
         self.backend.refresh(self)
+        self.emit('changed')
 
     def add_object(self, obj):
         self._objects[obj.uid] = obj

@@ -1,20 +1,6 @@
 from gi.repository import Gtk, GLib, Pango
 
 
-class StatementListItem(Gtk.ListBoxRow):
-
-    def __init__(self, statement):
-        super(StatementListItem, self).__init__()
-        self.statement = statement
-        lbl_text = statement['statement'].replace('\r', ' ')
-        lbl_text = lbl_text.replace('\n', ' ').strip()
-        lbl = Gtk.Label(lbl_text)
-        lbl.set_xalign(0)
-        lbl.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
-        lbl.set_line_wrap(False)
-        self.add(lbl)
-
-
 class EditorContext(Gtk.Box):
 
     def __init__(self, worksheet):
@@ -30,15 +16,24 @@ class EditorContext(Gtk.Box):
         self.lbl_conn.set_xalign(0)
         self.pack_start(self.lbl_conn, False, True, 0)
 
-        lbl = Gtk.Label()
-        lbl.set_markup('<small>Statements</small>')
-        lbl.set_xalign(0)
-        self.pack_start(lbl, False, False, 0)
-
-        self.lst_statements = Gtk.ListBox()
+        self.lst_statements = Gtk.TreeView()
+        renderer = Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.MIDDLE)
+        column = Gtk.TreeViewColumn("Statements", renderer, text=0)
+        self.lst_statements.append_column(column)
+        self.lst_statements_model = Gtk.ListStore(str)
+        self.lst_statements.set_model(self.lst_statements_model)
         self.pack_start(self.lst_statements, True, True, 0)
         self.lst_statements.connect(
             'row-activated', self.on_statement_row_activated)
+
+        self.browser = Gtk.TreeView()
+        renderer = Gtk.CellRendererText(
+            ellipsize=Pango.EllipsizeMode.MIDDLE)
+        column = Gtk.TreeViewColumn("Tables / Views", renderer, text=0)
+        self.browser.append_column(column)
+        self.browser_model = Gtk.ListStore(str)
+        self.browser.set_model(self.browser_model)
+        self.pack_start(self.browser, True, True, 0)
 
         self.worksheet.connect(
             'connection-changed', self.on_connection_changed)
@@ -56,12 +51,23 @@ class EditorContext(Gtk.Box):
         markup += '<b>{}</b>'.format(GLib.markup_escape_text(conn))
         self.lbl_conn.set_markup(markup)
 
+        # update schema
+        self.browser_model.clear()
+        if worksheet.connection:
+            worksheet.connection.schema.connect(
+                'changed', self._update_browser)
+
+    def _update_browser(self, schema):
+        objects = sorted(schema.get_objects(types=['table', 'view']),
+                         key=lambda i: i.name)
+        for item in objects:
+            self.browser_model.append([item.name])
+
     def on_statements_changed(self, editor):
-        for child in self.lst_statements.get_children():
-            self.lst_statements.remove(child)
+        self.lst_statements_model.clear()
         for statement in editor.get_statements():
-            self.lst_statements.add(StatementListItem(statement))
-        self.lst_statements.show_all()
+            sql = statement['statement'].replace('\r', ' ').replace('\n', ' ')
+            self.lst_statements_model.append([sql.strip()])
 
     def on_statement_row_activated(self, listbox, row):
         self.worksheet.editor.set_cursor_position(row.statement['start'])

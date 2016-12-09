@@ -27,6 +27,10 @@ class Worksheet(Gtk.VPaned):
         sw.add(self.editor)
 
         sw_context = Gtk.ScrolledWindow()
+        sw_context.set_policy(
+            Gtk.PolicyType.NEVER,
+            Gtk.PolicyType.AUTOMATIC
+        )
         sw_context.add(self.editor_context)
 
         self._context_paned = Gtk.HPaned()
