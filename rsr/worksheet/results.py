@@ -42,6 +42,7 @@ class DataList(Gtk.TreeView):
         self.set_reorderable(False)
         self.set_enable_search(False)
         self.set_fixed_height_mode(True)
+        self.set_grid_lines(Gtk.TreeViewGridLines.BOTH)
         # Selection is handled by button-press-event
         self.get_selection().set_mode(Gtk.SelectionMode.NONE)
         self._selection = ResultSelection(self)
