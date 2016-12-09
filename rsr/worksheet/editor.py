@@ -164,7 +164,11 @@ class Editor(GtkSource.View):
         return iter_start, iter_end
 
     def get_statement_at_cursor(self):
-        iter_start, iter_end = self.get_statement_iters_at_cursor()
+        """Returns statement under cursor or selected part of buffer."""
+        if self.buffer.get_has_selection():
+            iter_start, iter_end = self.buffer.get_selection_bounds()
+        else:
+            iter_start, iter_end = self.get_statement_iters_at_cursor()
         stmt = self.buffer.get_text(
             iter_start, iter_end, include_hidden_chars=False)
         stmt = stmt.strip()
