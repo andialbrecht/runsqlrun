@@ -11,6 +11,7 @@ class DocViewer(Gtk.Notebook):
     def __init__(self, win):
         super(DocViewer, self).__init__()
         self.win = win
+        self.set_scrollable(True)
 
         self.connect('page-added', self.on_page_count_changed)
         self.connect('page-removed', self.on_page_count_changed)
