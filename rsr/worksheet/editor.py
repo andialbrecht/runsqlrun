@@ -18,6 +18,7 @@ class Editor(GtkSource.View):
         super(Editor, self).__init__()
         self.buffer = GtkSource.Buffer()
         self.worksheet = worksheet
+        self.config = worksheet.app.config
         self._parsed = None
         self._statements = []
 
@@ -30,14 +31,13 @@ class Editor(GtkSource.View):
         lang_manager = GtkSource.LanguageManager()
         self.buffer.set_language(lang_manager.get_language('sql'))
         self.set_buffer(self.buffer)
-        self._setup_font()
 
-        self.set_show_line_numbers(True)
+        self._setup_font()
+        self._setup_tab_width()
+        self._setup_line_numbers()
+
+        self.set_auto_indent(True)
         self.set_highlight_current_line(True)
-        # attrs = GtkSource.MarkAttributes()
-        # attrs.set_icon_name('document-new-symbolic')
-        # self.set_mark_attributes('statement', attrs, 10)
-        # self.set_show_line_marks(True)
 
         renderer = StatementGutter(self.buffer)
         gutter = self.get_gutter(Gtk.TextWindowType.LEFT)
@@ -56,30 +56,33 @@ class Editor(GtkSource.View):
 
     def _setup_style_scheme(self):
         sm = GtkSource.StyleSchemeManager()
-        sm.append_search_path(paths.theme_dir)
-        if self.worksheet.app.args.dark_theme:
-            scheme_name = 'monokai-extended'
-        else:
-            schema = 'org.gnome.gedit.preferences.editor'
-            if schema in Gio.Settings.list_schemas():
-                settings = Gio.Settings(schema)
-                scheme_name = settings.get_string('scheme')
-            else:
-                scheme_name = 'classic'
-        self.buffer.set_style_scheme(sm.get_scheme(scheme_name))
 
-
+        def set_theme(*args):
+            self.buffer.set_style_scheme(
+                sm.get_scheme(self.config.ui_style_scheme))
+        set_theme()
+        self.config.connect('notify::ui-style-scheme', set_theme)
 
     def _setup_font(self):
-        # TODO: Move to configuration
-        schema = 'org.gnome.desktop.interface'
-        if schema in Gio.Settings.list_schemas():
-            settings = Gio.Settings(schema)
-            font_name = settings.get_string('monospace-font-name')
-        else:
-            font_name = 'Monospace 13'
-        font_desc = Pango.FontDescription.from_string(font_name)
-        self.modify_font(font_desc)
+        def set_font(*args):
+            font_desc = Pango.FontDescription.from_string(
+                self.config.get_fontname())
+            self.modify_font(font_desc)
+        set_font()
+        self.config.connect('notify::font-use-system-font', set_font)
+        self.config.connect('notify::font-fontname', set_font)
+
+    def _setup_tab_width(self):
+        def set_tabwidth(*args):
+            self.set_tab_width(self.config.editor_tab_width)
+        set_tabwidth()
+        self.config.connect('notify::editor-tab-width', set_tabwidth)
+
+    def _setup_line_numbers(self):
+        def set_lino(*args):
+            self.set_show_line_numbers(self.config.editor_show_line_numbers)
+        set_lino()
+        self.config.connect('notify::editor-show-line-numbers', set_lino)
 
     def _setup_completions(self):
         completion = self.get_completion()
@@ -180,8 +183,9 @@ class Editor(GtkSource.View):
         iter_start, iter_end = self.get_statement_iters_at_cursor()
         stmt = self.buffer.get_text(
             iter_start, iter_end, include_hidden_chars=False)
-        formatted = sqlparse.format(stmt, reindent=True, keyword_case='upper',
-                                    wrap_after=80)
+        formatted = sqlparse.format(
+            stmt, reindent=True, keyword_case='upper',
+            wrap_after=80, indent_width=1, indent_tabs=True)
         self.buffer.delete(iter_start, iter_end)
         self.buffer.insert(iter_start, formatted)
 
@@ -235,10 +239,12 @@ class StatementGutter(GtkSource.GutterRenderer):
         if not in_statement:
             return
         style = self.buffer.get_style_scheme()
-        ok, col_default = Gdk.Color.parse(
-            style.get_style('line-numbers').get_property('foreground'))
-        # ok, col_highlight = Gdk.Color.parse(
-        #     style.get_style('selection').get_property('foreground'))
+        ref_style = style.get_style('line-numbers')
+        if ref_style is not None:
+            ok, col_default = Gdk.Color.parse(
+                ref_style.get_property('foreground'))
+        else:
+            ok, col_default = Gdk.Color.parse('#1565C0')
         ok, col_highlight = Gdk.Color.parse('#1565C0')
         cr.move_to(cell_area.x, cell_area.y)
         cr.line_to(cell_area.x, cell_area.y + cell_area.height)
