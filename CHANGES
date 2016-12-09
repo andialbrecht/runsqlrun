@@ -3,6 +3,7 @@ Development Version
 
 * "Execute" now executes either the text selection of the current
   editor (new behavior) or the statement under the cursor.
+* UI cleanups.
 
 
 Version 0.4.2 (2016-04-29)

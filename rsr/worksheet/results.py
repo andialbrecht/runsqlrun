@@ -633,12 +633,14 @@ class DataViewer(Gtk.Dialog):
         """
         Gtk.Dialog.__init__(self, 'Cell Content', parent,
                             Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                            (Gtk.STOCK_CLOSE, Gtk.ResponseType.OK))
+                            None, use_header_bar=True)
+        self.set_border_width(10)
         sw = Gtk.ScrolledWindow()
         sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
         self.vbox.pack_start(sw, True, True, True)
         tv = Gtk.TextView()
+        tv.set_border_width(10)
         tv.set_editable(False)
         tv.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
         tv.get_buffer().set_text(str(data))
