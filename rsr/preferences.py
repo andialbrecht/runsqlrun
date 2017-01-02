@@ -35,6 +35,9 @@ class PreferencesDialog(Gtk.Dialog):
         switch.connect(
             'notify::active',
             lambda *a: self._sp('ui-dark-theme', switch.get_active()))
+        # switch get's sometimes cleaned up on the GTK side before the
+        # callback is called, which results in some strange NameError
+        self._switch_dark_theme = switch
 
     def _setup_color_schemes(self):
         chooser = GtkSource.StyleSchemeChooserWidget()
@@ -48,6 +51,7 @@ class PreferencesDialog(Gtk.Dialog):
             'notify::style-scheme',
             lambda *a: self._sp('ui-style-scheme',
                                 chooser.get_style_scheme().get_id()))
+        self._chooser_color_scheme = chooser
 
     def _setup_font(self):
         use_system = self.builder.get_object('font_use_system_font')
