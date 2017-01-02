@@ -23,7 +23,7 @@ class BaseEditor(GtkSource.View):
 
         if language is not None:
             lang_manager = GtkSource.LanguageManager()
-            self.buffer.set_language(lang_manager.get_language('sql'))
+            self.buffer.set_language(lang_manager.get_language(language))
 
         self._setup_style_scheme()
         self._setup_font()
