@@ -1,3 +1,5 @@
+import uuid
+
 import cairo
 from gi.repository import Gtk, GtkSource, Pango, GObject, Gdk
 
@@ -216,6 +218,9 @@ class Editor(BaseEditor):
 
     def close(self):
         self.worksheet.win.docview.close_current_editor()
+
+    def insert_uuid(self):
+        self.buffer.insert_at_cursor(str(uuid.uuid4()))
 
     def get_parsed_statement(self):
         return self._parsed

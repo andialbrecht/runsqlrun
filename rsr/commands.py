@@ -121,6 +121,12 @@ commands = {
                 'description': 'Closes the current editor',
                 'shortcut': '<Ctrl>W',
                 'callback': 'editor.close',
+            },
+            'insert_uuid': {
+                'label': 'Insert UUID',
+                'description': 'Inserts a new UUID at cursor',
+                'callback': 'editor.insert_uuid',
+                'shortcut': '<Alt><Shift>u'
             }
         }
     }
