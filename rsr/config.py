@@ -49,11 +49,11 @@ class Config(GObject.GObject):
 
 
 def load():
+    conf = Config()
     if not os.path.exists(CONFIG_FILE):
-        return {}
+        return conf
     with open(CONFIG_FILE) as f:
         data = json.load(f)
-    conf = Config()
     for gspec in conf.list_properties():
         if gspec.name in data:
             conf.set_property(gspec.name, data[gspec.name])
