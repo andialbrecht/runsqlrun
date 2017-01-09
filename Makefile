@@ -8,3 +8,8 @@ icons: data/icons/128x128
 
 compile-resources:
 	glib-compile-resources --target=data/runsqlrun.gresource --sourcedir=data/ data/runsqlrun.gresource.xml
+
+bootstrap-debian: install-deps-debian all
+
+install-deps-debian:
+	@sudo apt-get install python3 python3-gi python3-keyring python3-sqlparse python3-xdg python3-cairo inkscape libglib2.0-bin python3-psycopg2
