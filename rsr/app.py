@@ -6,7 +6,6 @@ import xdg.BaseDirectory
 from gi.repository import Gio, Gtk
 
 from rsr import config
-from rsr.commands import commands
 from rsr.connections.manager import ConnectionManager
 from rsr.mainwin import MainWindow
 from rsr.preferences import PreferencesDialog
@@ -93,6 +92,7 @@ class Application(Gtk.Application):
         self.on_use_dark_theme()
         self.action_groups = {}
         accel_group = Gtk.AccelGroup()
+        commands = self.config.get_commands()
         for group_key in commands:
             group = Gio.SimpleActionGroup()
             self.action_groups[group_key] = group
