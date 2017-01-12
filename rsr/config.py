@@ -46,11 +46,9 @@ class Config(GObject.GObject):
 
     def get_commands(self):
         result = copy.deepcopy(commands)
-        print(result)
         for cat, shortcuts in self.shortcuts.items():
             for command, shortcut in shortcuts.items():
                 result[cat]['actions'][command]['shortcut'] = shortcut
-        print(result)
         return result
 
     def save(self):
