@@ -1,7 +1,7 @@
 import uuid
 
 import cairo
-from gi.repository import Gtk, GtkSource, Pango, GObject, Gdk
+from gi.repository import Gtk, GtkSource, Pango, GObject, Gdk, GLib
 
 import sqlparse
 
@@ -73,6 +73,7 @@ class Editor(BaseEditor):
     def __init__(self, worksheet):
         super(Editor, self).__init__(worksheet.app, 'sql')
         self.worksheet = worksheet
+        self._parse_timeout = None
         self._parsed = None
         self._statements = []
 
@@ -89,12 +90,18 @@ class Editor(BaseEditor):
         # Completions
         self._setup_completions()
 
-        self.buffer.connect('changed', self.on_buffer_changed)
+        self.buffer.connect('changed', self.on_buffer_changed_delayed)
 
     def _setup_completions(self):
         completion = self.get_completion()
         completion.add_provider(DbObjectProvider(self))
         completion.add_provider(SqlKeywordProvider())
+
+    def on_buffer_changed_delayed(self, buf):
+        if self._parse_timeout is not None:
+            GLib.source_remove(self._parse_timeout)
+        self._parse_timeout = GLib.timeout_add(
+            200, self.on_buffer_changed, buf)
 
     def on_buffer_changed(self, buf):
         sql = self.get_text()
@@ -141,6 +148,7 @@ class Editor(BaseEditor):
             offset += len(statement)
         self._statements = stmt_data
         self.emit('statements-changed')
+        self._parse_timeout = None
 
     def get_statements(self):
         return self._statements
