@@ -2,7 +2,6 @@ from gi.repository import Gio, Gtk
 from gi.repository.GdkPixbuf import Pixbuf
 
 from rsr import __version__
-from rsr.commands import commands
 from rsr.connections.ui import ConnectionDialog
 
 
@@ -42,6 +41,7 @@ class HeaderBar(Gtk.HeaderBar):
     def _btn_from_command(self, group, name):
         btn = Gtk.Button()
         btn.set_action_name('app.{}_{}'.format(group, name))
+        commands = self.win.app.config.get_commands()
         data = commands[group]['actions'][name]
         icon = Gio.ThemedIcon(name=data['icon'])
         image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)

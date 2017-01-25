@@ -1,11 +1,14 @@
 import json
 import os
+import copy
 
 from gi.repository import GObject, Gio
 from xdg import BaseDirectory
+from rsr.commands import commands
 
 CONFIG_FILE = os.path.join(BaseDirectory.save_config_path('runsqlrun'),
                            'config.json')
+default_keys = lambda c: {k:v['shortcut'] for k,v in commands[c]['actions'].items()}
 
 name = 'runsqlrun'
 version = '0.4.2-dev0'
@@ -24,6 +27,7 @@ class Config(GObject.GObject):
     font_fontname = GObject.Property(type=str, default='Monospace 13')
     editor_tab_width = GObject.Property(type=int, default=2)
     editor_show_line_numbers = GObject.Property(type=bool, default=True)
+    shortcuts = {'app':default_keys('app'), 'editor':default_keys('editor')}
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -40,12 +44,21 @@ class Config(GObject.GObject):
         else:
             return self.font_fontname
 
+    def get_commands(self):
+        result = copy.deepcopy(commands)
+        for cat, shortcuts in self.shortcuts.items():
+            for command, shortcut in shortcuts.items():
+                result[cat]['actions'][command]['shortcut'] = shortcut
+        return result
+
     def save(self):
         data = {}
         for gspec in self.list_properties():
             data[gspec.name] = self.get_property(gspec.name)
+        for cat in self.shortcuts:
+            data['shortcuts_%s' % cat] = self.shortcuts[cat]
         with open(CONFIG_FILE, 'w') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=2, sort_keys=True)
 
 
 def load():
@@ -57,4 +70,8 @@ def load():
     for gspec in conf.list_properties():
         if gspec.name in data:
             conf.set_property(gspec.name, data[gspec.name])
+    for cat in conf.shortcuts:
+        name = 'shortcuts_%s' % cat
+        if name in data:
+            conf.shortcuts[cat] = data[name]
     return conf
