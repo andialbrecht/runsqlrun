@@ -8,7 +8,6 @@ from rsr.commands import commands
 
 CONFIG_FILE = os.path.join(BaseDirectory.save_config_path('runsqlrun'),
                            'config.json')
-default_keys = lambda c: {k:v['shortcut'] for k,v in commands[c]['actions'].items()}
 
 name = 'runsqlrun'
 version = '0.4.2-dev0'
@@ -16,6 +15,12 @@ description = 'A database UI.'
 author = 'Andi Albrecht'
 author_email = 'albrecht.andi@gmail.com'
 url = 'http://runsqlrun.org'
+
+
+def default_keys(section):
+    """Return the default shortcuts for section."""
+    return {key: v['shortcut']
+            for key, v in commands[section]['actions'].items()}
 
 
 class Config(GObject.GObject):
@@ -27,7 +32,7 @@ class Config(GObject.GObject):
     font_fontname = GObject.Property(type=str, default='Monospace 13')
     editor_tab_width = GObject.Property(type=int, default=2)
     editor_show_line_numbers = GObject.Property(type=bool, default=True)
-    shortcuts = {'app':default_keys('app'), 'editor':default_keys('editor')}
+    shortcuts = {'app': default_keys('app'), 'editor': default_keys('editor')}
 
     def __init__(self):
         GObject.GObject.__init__(self)
