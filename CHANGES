@@ -5,6 +5,7 @@ Development Version
   editor (new behavior) or the statement under the cursor.
 * UI cleanups.
 * Add preferences dialog.
+* Configurable shortcuts (no GUI for now) (#25, by mjs7231).
 
 
 Version 0.4.2 (2016-04-29)
