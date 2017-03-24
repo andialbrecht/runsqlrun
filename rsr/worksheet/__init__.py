@@ -43,6 +43,7 @@ class Worksheet(Gtk.VPaned):
         self.add2(self.results)
 
         self.connect('realize', self.on_map_event)
+        self.connect('size-allocate', self.on_size_allocate)
         self.app.connection_manager.connect(
             'connection-deleted', self.on_connection_deleted)
 
@@ -51,6 +52,11 @@ class Worksheet(Gtk.VPaned):
             return
         height = self.get_parent().get_allocation().height
         self.set_position(int(height / 3) * 2)
+
+    def on_size_allocate(self, widget, allocation, *args):
+        # adjust position the always show results
+        if self.get_position() > allocation.height - 10:
+            self.set_position(allocation.height - 20)
 
     def on_connection_deleted(self, manager, key):
         if self.connection is not None and self.connection.key == key:
