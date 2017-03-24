@@ -201,8 +201,10 @@ class Editor(BaseEditor):
         formatted = sqlparse.format(
             stmt, reindent=True, keyword_case='upper',
             wrap_after=80, indent_width=1, indent_tabs=True)
+        self.buffer.begin_user_action()
         self.buffer.delete(iter_start, iter_end)
         self.buffer.insert(iter_start, formatted)
+        self.buffer.end_user_action()
 
     def jump_next(self):
         mark = self.buffer.get_insert()
