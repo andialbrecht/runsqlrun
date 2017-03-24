@@ -20,7 +20,7 @@ class EditorContext(Gtk.Box):
         renderer = Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.MIDDLE)
         column = Gtk.TreeViewColumn("Statements", renderer, text=0)
         self.lst_statements.append_column(column)
-        self.lst_statements_model = Gtk.ListStore(str)
+        self.lst_statements_model = Gtk.ListStore(str, object)
         self.lst_statements.set_model(self.lst_statements_model)
         self.pack_start(self.lst_statements, True, True, 0)
         self.lst_statements.connect(
@@ -67,8 +67,10 @@ class EditorContext(Gtk.Box):
         self.lst_statements_model.clear()
         for statement in editor.get_statements():
             sql = statement['statement'].replace('\r', ' ').replace('\n', ' ')
-            self.lst_statements_model.append([sql.strip()])
+            self.lst_statements_model.append([sql.strip(), statement])
 
-    def on_statement_row_activated(self, listbox, row):
-        self.worksheet.editor.set_cursor_position(row.statement['start'])
+    def on_statement_row_activated(self, listbox, row, *args):
+        iter_ = listbox.get_model().get_iter_from_string(str(row))
+        statement = listbox.get_model().get_value(iter_, 1)
+        self.worksheet.editor.set_cursor_position(statement['start'])
         self.worksheet.editor.grab_focus()
